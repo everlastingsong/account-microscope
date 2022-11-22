@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
-    "dev": "webpack serve --content-base public",
-    "start": "sirv public --no-clear",
+    "dev": "webpack serve --content-base docs",
+    "start": "sirv docs --no-clear",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
