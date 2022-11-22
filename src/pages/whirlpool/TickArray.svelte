@@ -16,7 +16,7 @@
 
 {#await tickArrayInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then tickArrayInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/tickarray" address={tickArrayInfo.meta.pubkey} /></Data>

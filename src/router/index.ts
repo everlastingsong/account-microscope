@@ -5,6 +5,7 @@ import Position from "../pages/whirlpool/Position.svelte";
 import WhirlpoolsConfig from "../pages/whirlpool/WhirlpoolsConfig.svelte";
 import FeeTier from "../pages/whirlpool/FeeTier.svelte";
 import TickArray from "../pages/whirlpool/TickArray.svelte";
+import WhirlpoolList from "../pages/whirlpool/List.svelte";
 
 import TokenAccount from "../pages/token/Account.svelte";
 import TokenMint from "../pages/token/Mint.svelte";
@@ -13,6 +14,7 @@ import Generic from "../pages/Generic.svelte";
 
 export const routes = {
   '/': Home,
+  '/whirlpool/list': WhirlpoolList,
   '/whirlpool/config/:pubkey': WhirlpoolsConfig,
   '/whirlpool/feetier/:pubkey': FeeTier,
   '/whirlpool/whirlpool/:pubkey': Whirlpool,

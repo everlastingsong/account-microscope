@@ -17,7 +17,7 @@
 
 {#await whirlpoolInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then whirlpoolInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/whirlpool" address={whirlpoolInfo.meta.pubkey} /></Data>
@@ -87,6 +87,7 @@
   <Data name="reward1 weekly emission">{whirlpoolInfo.derived.reward1WeeklyEmission}</Data>
   <Data name="reward2 weekly emission">{whirlpoolInfo.derived.reward2WeeklyEmission}</Data>
   <Data name="reward last updated timestamp">{whirlpoolInfo.derived.rewardLastUpdatedTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
+  <Data name="oracle"><Pubkey address={whirlpoolInfo.derived.oracle} /></Data>
   <Data name="neighboring tick arrays">
     <table style="border-spacing: 0;">
     <thead><th>current</th><th>initialized</th><th>start tick</th><th>start price</th><th>pubkey</th></thead>

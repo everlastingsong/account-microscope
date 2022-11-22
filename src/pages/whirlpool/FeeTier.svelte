@@ -16,7 +16,7 @@
 
 {#await feeTierInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then feeTierInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/feetier" address={feeTierInfo.meta.pubkey} /></Data>

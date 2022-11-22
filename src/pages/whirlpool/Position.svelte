@@ -16,7 +16,7 @@
 
 {#await positionInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then positionInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/position" address={positionInfo.meta.pubkey} /></Data>

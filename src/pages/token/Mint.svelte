@@ -16,7 +16,7 @@
 
 {#await mintInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then mintInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="token/mint" address={mintInfo.meta.pubkey} /></Data>

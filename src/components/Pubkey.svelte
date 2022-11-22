@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Address } from "@project-serum/anchor";
-  import { push } from "svelte-spa-router";
 
   export let address: Address;
   export let short: boolean = false;
@@ -12,25 +11,31 @@
     return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
   }
 
-  function onClick() {
-    const path = `/${type}/${address}`;
-    console.log(path);
-    push(path);
+  let clipboard;
+  function copy() {
+    navigator.clipboard.writeText(address.toString());
+    clipboard.textContent = "✅";
+    setTimeout(()=>clipboard.textContent = "📎", 1000);
   }
+
+  let path = `#/${type}/${address}`;
 </script>
 
 📘
-<a on:click={onClick}>
+<span on:mouseenter={() => clipboard.style.setProperty("visibility", "visible")} on:mouseleave={() => clipboard.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
+<a href={path}>
 {#if short}
 <span>{getShortNotation(address)}</span>
 {:else}
 <span>{address}</span>
 {/if}
 </a>
+<span bind:this={clipboard} on:click={copy} style="visibility: hidden;">📎</span>
+</span>
 
 <style>
   a {
-    cursor: pointer;
     color: #39f;
+    text-decoration: none;
   }
 </style>

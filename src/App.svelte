@@ -8,9 +8,10 @@
   let pubkey: string;
 
   // INIT RPC
-  import { setRPC } from "./libs/client";
-  setRPC("https://api.mainnet-beta.solana.com");
-
+  //import { setRPC } from "./libs/client";
+  //setRPC("https://api.mainnet-beta.solana.com");
+  //setRPC("https://solana-api.projectserum.com");
+  //setRPC("https://rpc.ankr.com/solana");
 
   function onSubmit() {
     console.log(pubkey);
@@ -26,9 +27,9 @@
 </script>
 
 <main>
-  <!--div style="text-align: right;">
+  <div style="text-align: right;">
   <RpcSelector />
-  </div-->
+  </div>
 
   <h1 style="margin: 0em;">🔬Account microscope</h1>
   <div></div>

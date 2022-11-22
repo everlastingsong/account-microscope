@@ -16,7 +16,7 @@
 
 {#await tokenAccountInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then tokenAccountInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="token/account" address={tokenAccountInfo.meta.pubkey} /></Data>

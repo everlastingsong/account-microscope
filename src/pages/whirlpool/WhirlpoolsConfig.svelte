@@ -17,7 +17,7 @@
 
 {#await configInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then configInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/config" address={configInfo.meta.pubkey} /></Data>

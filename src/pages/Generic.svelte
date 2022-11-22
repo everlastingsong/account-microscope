@@ -16,7 +16,7 @@
 
 {#await genericAccountInfoPromise}
   loading...
-  addr: {params.pubkey}
+  {params.pubkey}
 {:then genericAccountInfo}
 <MetaData>
   <Data name="pubkey" type="PublicKey"><Pubkey address={genericAccountInfo.meta.pubkey} /></Data>
