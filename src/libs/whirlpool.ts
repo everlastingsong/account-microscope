@@ -1,5 +1,6 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray } from "@orca-so/whirlpools-sdk";
+import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@project-serum/anchor";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
@@ -191,6 +192,11 @@ type PositionDerivedInfo = {
   rewardAmount0?: Decimal,
   rewardAmount1?: Decimal,
   rewardAmount2?: Decimal,
+  status: string,
+  sharePercentOfLiquidity: Decimal,
+  tickCurrentIndex: number,
+  currentPrice: Decimal,
+  poolLiquidity: BN,
 }
 
 type PositionInfo = {
@@ -209,6 +215,13 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
 
   // get whirlpool
   const whirlpoolData = await fetcher.getPool(positionData.whirlpool, true);
+
+  // get status & share
+  const status = PositionUtil.getPositionStatus(whirlpoolData.tickCurrentIndex, positionData.tickLowerIndex, positionData.tickUpperIndex);
+  let sharePercentOfLiquidity = new Decimal(0);
+  if (status === PositionStatus.InRange && !positionData.liquidity.isZero()) {
+    sharePercentOfLiquidity = toFixedDecimal(new Decimal(positionData.liquidity.toString()).div(whirlpoolData.liquidity.toString()).mul(100), 9);
+  }
 
   // get mints
   const mintPubkeys = [];
@@ -277,6 +290,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       rewardAmount0: rewardsQuote[0] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[0], decimalsR0),
       rewardAmount1: rewardsQuote[1] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[1], decimalsR1),
       rewardAmount2: rewardsQuote[2] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[2], decimalsR2),
+      status: status === PositionStatus.InRange ? "Price is In Range" : (status === PositionStatus.AboveRange ? "Price is Above Range" : "Price is Below Range"),
+      sharePercentOfLiquidity,
+      tickCurrentIndex: whirlpoolData.tickCurrentIndex,
+      currentPrice: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB), decimalsB),
+      poolLiquidity: whirlpoolData.liquidity,
     }
   };
 }

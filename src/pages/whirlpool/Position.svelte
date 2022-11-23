@@ -62,6 +62,11 @@
   <Data name="reward0 amount">{positionInfo.derived.rewardAmount0}</Data>
   <Data name="reward1 amount">{positionInfo.derived.rewardAmount1}</Data>
   <Data name="reward2 amount">{positionInfo.derived.rewardAmount2}</Data>
+  <Data name="pool liquidity">{positionInfo.derived.poolLiquidity}</Data>
+  <Data name="current tick index">{positionInfo.derived.tickCurrentIndex}</Data>
+  <Data name="current price">{positionInfo.derived.currentPrice}</Data>
+  <Data name="position status">{positionInfo.derived.status}</Data>
+  <Data name="share of liquidity">{positionInfo.derived.sharePercentOfLiquidity} %</Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}
