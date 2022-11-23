@@ -92,18 +92,18 @@
     <table style="border-spacing: 0;">
     <thead><th>current</th><th>initialized</th><th>start tick</th><th>start price</th><th>pubkey</th></thead>
     <tbody>
-    <tr><td colspan="5">A to B direction</td></tr>
+    <tr><td colspan="5">A to B direction (price down)</td></tr>
     {#each whirlpoolInfo.derived.neighboringTickArrays as tickArray}
     <!--tr class="{tickArray.hasTickCurrentIndex ? "current" : (tickArray.isInitialized ? "initialized" : "uninitialized")}"-->
     <tr class="{tickArray.isInitialized ? (tickArray.hasTickCurrentIndex ? "current" : "initialized") : "uninitialized"}">
-      <td>{tickArray.hasTickCurrentIndex}</td>
+      <td>{tickArray.hasTickCurrentIndex}{tickArray.hasTickCurrentIndex ? " 📍" : ""}</td>
       <td>{tickArray.isInitialized}</td>
       <td>{tickArray.startTickIndex}</td>
       <td>{tickArray.startPrice}</td>
       <td><Pubkey type="whirlpool/tickarray" address={tickArray.pubkey} short/></td>
     </tr>
     {/each}
-    <tr><td colspan="5">B to A direction</td></tr>
+    <tr><td colspan="5">B to A direction (price up)</td></tr>
     </tbody>
     </table>
   </Data>

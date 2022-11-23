@@ -1,6 +1,7 @@
-import { AccountFetcher, ParsableMintInfo, ParsableTokenInfo } from "@orca-so/whirlpools-sdk";
+import { AccountFetcher, ORCA_WHIRLPOOL_PROGRAM_ID, ParsableMintInfo, ParsableTokenInfo, PDAUtil } from "@orca-so/whirlpools-sdk";
 import { Address } from "@project-serum/anchor";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
+import { PublicKey } from "@solana/web3.js";
 import { MintInfo as SplMintInfo, AccountInfo as SplAccountInfo } from "@solana/spl-token";
 import { AccountMetaInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
@@ -19,6 +20,7 @@ type TokenAccountInfo = {
 
 type MintDerivedInfo = {
   supply: Decimal,
+  whirlpoolPosition?: PublicKey,
 }
 
 type MintInfo = {
@@ -56,11 +58,16 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const accountInfo = await connection.getAccountInfo(pubkey);
   const splMintInfo = ParsableMintInfo.parse(accountInfo.data);
 
+  // check if whirlpool position mint
+  const positionPubkey = PDAUtil.getPosition(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
+  const position = await fetcher.getPosition(positionPubkey, true);
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: splMintInfo,
     derived: {
       supply: DecimalUtil.fromU64(splMintInfo.supply, splMintInfo.decimals),
+      whirlpoolPosition: position === null ? undefined : positionPubkey,
     }
   };
 }

@@ -9,6 +9,7 @@
   export let params;
 
   import { getMintInfo } from "../../libs/token";
+    import { derived } from "svelte/store";
   $: mintInfoPromise = getMintInfo(params.pubkey);
 </script>
 
@@ -35,6 +36,10 @@
 
 <DerivedData>
   <Data name="supply">{mintInfo.derived.supply}</Data>
+  <Data name="is whirlpool position mint">{mintInfo.derived.whirlpoolPosition !== undefined}</Data>
+  {#if mintInfo.derived.whirlpoolPosition !== undefined}
+  <Data name="whirlpool position"><Pubkey type="whirlpool/position" address={mintInfo.derived.whirlpoolPosition} /></Data>
+  {/if}
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}

@@ -33,7 +33,7 @@
     <table style="border-spacing: 0;">
       <thead><th>offset</th><th>tick index</th><th>initialized</th><th>liquidity net</th></thead>
       <tbody>
-      <tr><td colspan="4">A to B direction</td></tr>
+      <tr><td colspan="4">A to B direction (price down)</td></tr>
       {#each tickArrayInfo.parsed.ticks as tick, offset}
       <tr class="{tick.initialized ? "initialized" : "uninitialized"}">
         <td>{offset}</td>
@@ -42,7 +42,7 @@
         <td>{tick.liquidityNet}</td>
       </tr>
       {/each}
-      <tr><td colspan="4">B to A direction</td></tr>
+      <tr><td colspan="4">B to A direction (price up)</td></tr>
       </tbody>
     </table>  
   </Data>
