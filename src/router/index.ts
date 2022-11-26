@@ -10,6 +10,8 @@ import WhirlpoolList from "../pages/whirlpool/List.svelte";
 import TokenAccount from "../pages/token/Account.svelte";
 import TokenMint from "../pages/token/Mint.svelte";
 
+import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
+
 import Generic from "../pages/Generic.svelte";
 
 export const routes = {
@@ -22,5 +24,6 @@ export const routes = {
   '/whirlpool/position/:pubkey': Position,
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
+  '/tokenswap/swapstate/:pubkey': TokenSwap,
   '/generic/:pubkey': Generic,
 }

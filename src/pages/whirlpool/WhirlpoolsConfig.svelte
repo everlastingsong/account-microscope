@@ -9,7 +9,6 @@
   export let params;
 
   import { getWhirlpoolsConfigInfo } from "../../libs/whirlpool";
-    import FeeTier from "./FeeTier.svelte";
   $: configInfoPromise = getWhirlpoolsConfigInfo(params.pubkey);
 </script>
 

@@ -5,6 +5,9 @@ import { ORCA_WHIRLPOOL_PROGRAM_ID } from "@orca-so/whirlpools-sdk";
 import { AddressUtil } from "@orca-so/common-sdk";
 import { getConnection } from "./client";
 
+const ORCA_TOKEN_SWAP_V1_ID = new PublicKey("DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1");
+const ORCA_TOKEN_SWAP_V2_ID = new PublicKey("9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP");
+
 export type ResolvedAccount = {
   pubkey: PublicKey,
   path: string,
@@ -29,6 +32,12 @@ export async function resolveAccountType(addr: Address): Promise<ResolvedAccount
     switch (accountInfo.data.length) {
       case 165: return { pubkey, path: "/token/account" };
       case 82: return { pubkey, path: "/token/mint" };
+    }
+  }
+
+  if (accountInfo.owner.equals(ORCA_TOKEN_SWAP_V1_ID) || accountInfo.owner.equals(ORCA_TOKEN_SWAP_V2_ID)) {
+    switch (accountInfo.data.length) {
+      case 324: return { pubkey, path: "/tokenswap/swapstate" };
     }
   }
 

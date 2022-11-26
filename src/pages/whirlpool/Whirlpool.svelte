@@ -9,7 +9,6 @@
   export let params;
 
   import { getWhirlpoolInfo } from "../../libs/whirlpool";
-    import { derived } from "svelte/store";
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
 </script>
 
