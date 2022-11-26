@@ -9,7 +9,6 @@
   export let params;
 
   import { getWhirlpoolInfo } from "../../libs/whirlpool";
-    import TickArray from "./TickArray.svelte";
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
 </script>
 
@@ -109,12 +108,13 @@
   </Data>
   <Data name="isotope whirlpools">
     <table style="border-spacing: 0;">
-      <thead><th>tick spacing</th><th>fee rate</th><th>tick index</th><th>price</th><th>pubkey</th></thead>
+      <thead><th>ts</th><th>fee</th><th>liquidity</th><th>tick</th><th>price</th><th>pubkey</th></thead>
       <tbody>
       {#each whirlpoolInfo.derived.isotopeWhirlpools as whirlpool}
       <tr>
         <td>{whirlpool.tickSpacing}</td>
         <td>{whirlpool.feeRate} %</td>
+        <td>{whirlpool.liquidity}</td>
         <td>{whirlpool.tickCurrentIndex}</td>
         <td>{whirlpool.price}</td>
         <td><Pubkey type="whirlpool/whirlpool" address={whirlpool.pubkey} short/></td>

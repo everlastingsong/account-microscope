@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Address } from "@project-serum/anchor";
+  import { getRPC } from "../libs/client";
 
   export let address: Address;
   export let short: boolean = false;
@@ -11,6 +12,26 @@
     return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
   }
 
+  function getSolscanURL(address: Address): string {
+    const solscanBaseUrl = "https://solscan.io/account";
+    const rpc = getRPC();
+
+    let querystring = "";
+    if (rpc.network === "devnet") {
+      querystring = "?cluster=devnet";
+    }
+    if (rpc.network === "localnet") {
+      querystring = `?cluster=custom&customUrl=${rpc.url}`;
+    }
+    if (rpc.network === "custom") {
+      // pass (don't include custom RPC URL, treat it as mainnet)
+    }
+
+    const url = `${solscanBaseUrl}/${address.toString()}${querystring}`;
+    return url;
+  }
+
+  let toolkit;
   let clipboard;
   function copy() {
     navigator.clipboard.writeText(address.toString());
@@ -22,7 +43,7 @@
 </script>
 
 📘
-<span on:mouseenter={() => clipboard.style.setProperty("visibility", "visible")} on:mouseleave={() => clipboard.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
+<span on:mouseenter={() => toolkit.style.setProperty("visibility", "visible")} on:mouseleave={() => toolkit.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
 <a href={path}>
 {#if short}
 <span>{getShortNotation(address)}</span>
@@ -30,7 +51,10 @@
 <span>{address}</span>
 {/if}
 </a>
-<span bind:this={clipboard} on:click={copy} style="visibility: hidden;">📎</span>
+<span bind:this={toolkit} style="visibility: hidden;">
+  <a target="_blank" href={getSolscanURL(address)}>🔍</a>
+  <span bind:this={clipboard} on:click={copy}>📎</span>
+</span>
 </span>
 
 <style>

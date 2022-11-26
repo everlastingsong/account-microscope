@@ -28,6 +28,7 @@ type IsotopeWhirlpool = {
   feeRate: Decimal,
   tickCurrentIndex: number,
   price: Decimal,
+  liquidity: BN,
 }
 
 type WhirlpoolDerivedInfo = {
@@ -141,6 +142,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
         pubkey: whirlpoolPubkeys[i],
         tickCurrentIndex: whirlpools[i].tickCurrentIndex,
         price: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpools[i].sqrtPrice, decimalsA, decimalsB), decimalsB),
+        liquidity: whirlpools[i].liquidity,
       });
     }
   });
