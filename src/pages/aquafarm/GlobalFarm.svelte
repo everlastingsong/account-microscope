@@ -9,6 +9,7 @@
   export let params;
 
   import { getGlobalFarmInfo } from "../../libs/aquafarm";
+    import { derived } from "svelte/store";
   $: infoPromise = getGlobalFarmInfo(params.pubkey);
 </script>
 
@@ -43,6 +44,20 @@
 </ParsedData>
 
 <DerivedData>
+  <Data name="is aquafarm">{info.derived.isAquaFarm}</Data>
+  <Data name="is doubledip">{info.derived.isDoubleDip}</Data>
+  <Data name="pool">{info.derived.poolName}</Data>
+  <Data name="pool / aquafarm / doubledip">
+    <table style="border-spacing: 0;">
+      <thead><th>account</th><th>pubkey</th></thead>
+      <tbody>
+        <tr><td>pool</td><td><Pubkey type="tokenswap/swapstate" address={info.derived.pool} /></td></tr>
+        <tr><td>aquafarm</td><td><Pubkey type="aquafarm/globalfarm" address={info.derived.aquaFarm} /></td></tr>
+        <tr><td>doubledip</td><td><Pubkey type="aquafarm/globalfarm" address={info.derived.doubleDip} /></td></tr>
+      </tbody>
+    </table>  
+  </Data>
+
   <Data name="decimals">
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>decimals</th></thead>

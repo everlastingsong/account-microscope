@@ -49,6 +49,7 @@
   let path = `#/${type}/${address}`;
 </script>
 
+{#if address}
 📘
 <span on:mouseenter={() => toolkit.style.setProperty("visibility", "visible")} on:mouseleave={() => toolkit.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
 <a href={path}>
@@ -69,6 +70,9 @@
   {/if}
 </span>
 </span>
+{:else}
+{address}
+{/if}
 
 <style>
   a {

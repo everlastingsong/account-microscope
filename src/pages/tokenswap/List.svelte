@@ -27,7 +27,7 @@
   loading...
 {:then poolConfigTuples}
 <table style="border-spacing: 0; font-size: smaller;">
-  <thead><th>name</th><th>deprecated</th><th>aquafarm</th><th>doubledip</th></thead>
+  <thead><th>name</th><th>deprecated</th><th>aquafarm</th><th>doubledip</th><th>doubledip reward</th></thead>
   <tbody>
   {#each poolConfigTuples as tuple}
   <tr>
@@ -41,6 +41,11 @@
     <td>
       {#if tuple.doubledip}
       <Pubkey type="aquafarm/globalfarm" address={tuple.doubledip.account} short />
+      {/if}
+    </td>
+    <td>
+      {#if tuple.doubledip}
+      <Pubkey type="token/mint" address={tuple.doubledip.rewardTokenMint} short />
       {/if}
     </td>
   </tr>

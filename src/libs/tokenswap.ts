@@ -5,6 +5,7 @@ import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { computeOutputAmount } from "@orca-so/stablecurve";
 import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
+import { getPoolConfigs } from "./orcaapi";
 import { getConnection } from "./client";
 import Decimal from "decimal.js";
 
@@ -94,6 +95,8 @@ type TokenSwapDerivedInfo = {
   poolFeeAccountAmount: Decimal,
   feeRate: Decimal,
   price: Decimal,
+  aquaFarm?: PublicKey,
+  doubleDip?: PublicKey
 }
 
 type TokenSwapInfo = {
@@ -148,6 +151,13 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
     feeRate = feeRate.add(tokenSwapAccountInfo.ownerFee);
   }
 
+  // offchain data
+  const configs = await getPoolConfigs();
+  const farm = configs.getAquaFarmByAddress(tokenSwapAccountInfo.poolMint);
+  const dd = configs.getDoubleDipByAddress(farm?.farmTokenMint);
+  const aquaFarm = farm?.account;
+  const doubleDip = dd?.account;
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: tokenSwapAccountInfo,
@@ -161,6 +171,8 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
       poolFeeAccountAmount: DecimalUtil.fromU64(accounts[2]?.amount ?? new u64(0), mints[2].decimals), // feeAccount not found
       feeRate: feeRate.toDecimal().mul(100),
       price,
+      aquaFarm,
+      doubleDip,
     }
   };
 }

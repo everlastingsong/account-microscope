@@ -8,6 +8,7 @@ import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
+import { getPoolConfigs } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
 
@@ -51,6 +52,12 @@ type GlobalFarmDerivedInfo = {
   rewardVaultAmount: Decimal,
   lastUpdatedTimestamp: moment.Moment,
   rewardWeeklyEmission: Decimal,
+  isAquaFarm: boolean,
+  isDoubleDip: boolean,
+  pool: PublicKey,
+  aquaFarm?: PublicKey,
+  doubleDip?: PublicKey,
+  poolName: string,
 }
 
 type GlobalFarmParsedInfo = {
@@ -109,6 +116,30 @@ export async function getGlobalFarmInfo(addr: Address): Promise<GlobalFarmInfo> 
     rewardWeeklyEmission = toFixedDecimal(DecimalUtil.adjustDecimals(num.mul(seconds_in_week).div(denom), decimalsReward), decimalsReward);
   }
 
+  // offchain data
+  const configs = await getPoolConfigs();
+  let pool: PublicKey = undefined;
+  let poolName: string = undefined;
+  let aquaFarm: PublicKey = undefined;
+  let doubleDip: PublicKey = undefined;
+  const isAquaFarm = configs.getAquaFarmByAddress(pubkey) !== undefined;
+  if (isAquaFarm) {
+    const farm = configs.getAquaFarmByAddress(pubkey);
+    pool = configs.getPoolByAddress(farm.baseTokenMint).account;
+    aquaFarm = farm.account;
+    doubleDip = configs.getDoubleDipByAddress(farm.farmTokenMint)?.account;
+    poolName = configs.getPoolByAddress(farm.baseTokenMint).name;
+  }
+  const isDoubleDip = configs.getDoubleDipByAddress(pubkey) !== undefined;
+  if (isDoubleDip) {
+    const dd = configs.getDoubleDipByAddress(pubkey);
+    const farm = configs.getAquaFarmByAddress(dd.baseTokenMint);
+    doubleDip = dd.account;
+    aquaFarm = farm.account;
+    pool = configs.getPoolByAddress(farm.baseTokenMint).account;
+    poolName = configs.getPoolByAddress(farm.baseTokenMint).name;
+  }
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: globalFarmInfo,
@@ -123,6 +154,12 @@ export async function getGlobalFarmInfo(addr: Address): Promise<GlobalFarmInfo> 
       rewardVaultAmount,
       lastUpdatedTimestamp: moment.unix(globalFarmInfo.lastUpdatedTimestamp.toNumber()),
       rewardWeeklyEmission,
+      isAquaFarm,
+      isDoubleDip,
+      pool,
+      aquaFarm,
+      doubleDip,
+      poolName,
     }
   };
 }
