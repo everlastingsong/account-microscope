@@ -35,7 +35,7 @@
 </ParsedData>
 
 <DerivedData>
-  <Data name="default protocol fee rate">{configInfo.derived.defaultProtocolFeeRate} %</Data>
+  <Data name="default protocol fee rate">{configInfo.derived.defaultProtocolFeeRate} % of fee</Data>
   <Data name="fee tiers">
     <table style="border-spacing: 0;">
       <thead><th>tick spacing</th><th>initialized</th><th>default fee rate</th><th>pubkey</th></thead>

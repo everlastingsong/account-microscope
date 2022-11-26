@@ -9,6 +9,7 @@
   export let params;
 
   import { getWhirlpoolInfo } from "../../libs/whirlpool";
+    import { derived } from "svelte/store";
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
 </script>
 
@@ -68,23 +69,44 @@
 </ParsedData>
 
 <DerivedData>
-  <Data name="decimals A">{whirlpoolInfo.derived.decimalsA}</Data>
-  <Data name="decimals B">{whirlpoolInfo.derived.decimalsB}</Data>
-  <Data name="decimals reward0">{whirlpoolInfo.derived.decimalsR0}</Data>
-  <Data name="decimals reward1">{whirlpoolInfo.derived.decimalsR1}</Data>
-  <Data name="decimals reward2">{whirlpoolInfo.derived.decimalsR2}</Data>
+  <Data name="decimals">
+    <table style="border-spacing: 0;">
+      <thead><th>token</th><th>decimals</th></thead>
+      <tbody>
+        <tr><td>A</td><td>{whirlpoolInfo.derived.decimalsA}</td></tr>
+        <tr><td>B</td><td>{whirlpoolInfo.derived.decimalsB}</td></tr>
+        <tr><td>reward0</td><td>{whirlpoolInfo.derived.decimalsR0}</td></tr>
+        <tr><td>reward1</td><td>{whirlpoolInfo.derived.decimalsR1}</td></tr>
+        <tr><td>reward2</td><td>{whirlpoolInfo.derived.decimalsR2}</td></tr>
+      </tbody>
+    </table>  
+  </Data>
   <Data name="price">{whirlpoolInfo.derived.price}</Data>
   <Data name="inverted price">{whirlpoolInfo.derived.invertedPrice}</Data>
   <Data name="fee rate">{whirlpoolInfo.derived.feeRate} %</Data>
-  <Data name="protocol fee rate">{whirlpoolInfo.derived.protocolFeeRate} %</Data>
-  <Data name="vault A amount">{whirlpoolInfo.derived.tokenVaultAAmount}</Data>
-  <Data name="vault B amount">{whirlpoolInfo.derived.tokenVaultBAmount}</Data>
-  <Data name="vault reward0 amount">{whirlpoolInfo.derived.tokenVaultR0Amount}</Data>
-  <Data name="vault reward1 amount">{whirlpoolInfo.derived.tokenVaultR1Amount}</Data>
-  <Data name="vault reward2 amount">{whirlpoolInfo.derived.tokenVaultR2Amount}</Data>
-  <Data name="reward0 weekly emission">{whirlpoolInfo.derived.reward0WeeklyEmission}</Data>
-  <Data name="reward1 weekly emission">{whirlpoolInfo.derived.reward1WeeklyEmission}</Data>
-  <Data name="reward2 weekly emission">{whirlpoolInfo.derived.reward2WeeklyEmission}</Data>
+  <Data name="protocol fee rate">{whirlpoolInfo.derived.protocolFeeRate} % of fee ({whirlpoolInfo.derived.feeRate.mul(whirlpoolInfo.derived.protocolFeeRate.div(100))} %)</Data>
+  <Data name="token vault amount">
+    <table style="border-spacing: 0;">
+      <thead><th>token</th><th>amount</th></thead>
+      <tbody>
+        <tr><td>A</td><td>{whirlpoolInfo.derived.tokenVaultAAmount}</td></tr>
+        <tr><td>B</td><td>{whirlpoolInfo.derived.tokenVaultBAmount}</td></tr>
+        <tr><td>reward0</td><td>{whirlpoolInfo.derived.tokenVaultR0Amount}</td></tr>
+        <tr><td>reward1</td><td>{whirlpoolInfo.derived.tokenVaultR1Amount}</td></tr>
+        <tr><td>reward2</td><td>{whirlpoolInfo.derived.tokenVaultR2Amount}</td></tr>
+      </tbody>
+    </table>  
+  </Data>
+  <Data name="reward weekly emission">
+    <table style="border-spacing: 0;">
+      <thead><th>reward</th><th>emission</th></thead>
+      <tbody>
+        <tr><td>reward0</td><td>{whirlpoolInfo.derived.reward0WeeklyEmission}</td></tr>
+        <tr><td>reward1</td><td>{whirlpoolInfo.derived.reward1WeeklyEmission}</td></tr>
+        <tr><td>reward2</td><td>{whirlpoolInfo.derived.reward2WeeklyEmission}</td></tr>
+      </tbody>
+    </table>  
+  </Data>
   <Data name="reward last updated timestamp">{whirlpoolInfo.derived.rewardLastUpdatedTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
   <Data name="oracle"><Pubkey address={whirlpoolInfo.derived.oracle} /></Data>
   <Data name="neighboring tick arrays">

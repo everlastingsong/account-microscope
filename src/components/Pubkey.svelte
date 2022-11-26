@@ -7,12 +7,15 @@
   export let type: string = "generic";
 
   function getShortNotation(address: Address): string {
+    if ( !address ) return `${address}`;
     const prefixSuffixLength = 5;
     const b58 = address.toString();
     return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
   }
 
   function getSolscanURL(address: Address): string {
+    if ( !address ) return "";
+
     const solscanBaseUrl = "https://solscan.io/account";
     const rpc = getRPC();
 
@@ -52,8 +55,10 @@
 {/if}
 </a>
 <span bind:this={toolkit} style="visibility: hidden;">
+  {#if address}
   <a target="_blank" href={getSolscanURL(address)}>🔍</a>
   <span bind:this={clipboard} on:click={copy}>📎</span>
+  {/if}
 </span>
 </span>
 
