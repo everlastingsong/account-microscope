@@ -57,11 +57,18 @@
   <Data name="inverted upper price">{positionInfo.derived.invertedPriceUpper}</Data>
   <Data name="token A amount">{positionInfo.derived.amountA}</Data>
   <Data name="token B amount">{positionInfo.derived.amountB}</Data>
-  <Data name="fee A amount">{positionInfo.derived.feeAmountA}</Data>
-  <Data name="fee B amount">{positionInfo.derived.feeAmountB}</Data>
-  <Data name="reward0 amount">{positionInfo.derived.rewardAmount0}</Data>
-  <Data name="reward1 amount">{positionInfo.derived.rewardAmount1}</Data>
-  <Data name="reward2 amount">{positionInfo.derived.rewardAmount2}</Data>
+  <Data name="harvestable amount">
+    <table style="border-spacing: 0;">
+      <thead><th>token</th><th>amount</th></thead>
+      <tbody>
+        <tr><td>fee A</td><td>{positionInfo.derived.feeAmountA}</td></tr>
+        <tr><td>fee B</td><td>{positionInfo.derived.feeAmountB}</td></tr>
+        <tr><td>reward0</td><td>{positionInfo.derived.rewardAmount0}</td></tr>
+        <tr><td>reward1</td><td>{positionInfo.derived.rewardAmount1}</td></tr>
+        <tr><td>reward2</td><td>{positionInfo.derived.rewardAmount2}</td></tr>
+      </tbody>
+    </table>  
+  </Data>
   <Data name="pool liquidity">{positionInfo.derived.poolLiquidity}</Data>
   <Data name="current tick index">{positionInfo.derived.tickCurrentIndex}</Data>
   <Data name="current price">{positionInfo.derived.currentPrice}</Data>
@@ -72,4 +79,9 @@
 {/await}
 
 <style>
+
+th, td {
+    padding: 0.1em 0.5em;
+}
+
 </style>

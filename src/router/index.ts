@@ -12,6 +12,9 @@ import TokenMint from "../pages/token/Mint.svelte";
 
 import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
 
+import GlobalFarm from "../pages/aquafarm/GlobalFarm.svelte";
+import UserFarm from "../pages/aquafarm/UserFarm.svelte";
+
 import Generic from "../pages/Generic.svelte";
 
 export const routes = {
@@ -25,5 +28,7 @@ export const routes = {
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
   '/tokenswap/swapstate/:pubkey': TokenSwap,
+  '/aquafarm/globalfarm/:pubkey': GlobalFarm,
+  '/aquafarm/userfarm/:pubkey': UserFarm,
   '/generic/:pubkey': Generic,
 }

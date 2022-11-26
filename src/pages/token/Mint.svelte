@@ -9,7 +9,6 @@
   export let params;
 
   import { getMintInfo } from "../../libs/token";
-    import { derived } from "svelte/store";
   $: mintInfoPromise = getMintInfo(params.pubkey);
 </script>
 

@@ -69,9 +69,6 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const accountInfo = await connection.getAccountInfo(pubkey);
   const whirlpoolData = ParsableWhirlpool.parse(accountInfo.data);
 
-  const ut = moment.unix(whirlpoolData.rewardLastUpdatedTimestamp.toNumber());//.utc();
-  console.log(ut.format("YYYY/MM/DD HH:mm:ss UTCZZ"));
-
   // get mints
   const mintPubkeys = [];
   mintPubkeys.push(whirlpoolData.tokenMintA);

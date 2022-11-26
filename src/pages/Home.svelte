@@ -8,6 +8,8 @@
     <li>Token / Mint</li>
     <li>Token / Account</li>
     <li>TokenSwap / SwapState</li>
+    <li>Aquafarm / GlobalFarm</li>
+    <li>Aquafarm / UserFarm</li>
     <li>Generic</li>
   </ul>
 

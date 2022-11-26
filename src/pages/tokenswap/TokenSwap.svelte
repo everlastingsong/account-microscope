@@ -19,7 +19,7 @@
   {params.pubkey}
 {:then tokenSwapInfo}
 <MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/whirlpool" address={tokenSwapInfo.meta.pubkey} /></Data>
+  <Data name="pubkey" type="PublicKey"><Pubkey type="tokenswap/swapstate" address={tokenSwapInfo.meta.pubkey} /></Data>
   <Data name="owner program" type="PublicKey"><Pubkey address={tokenSwapInfo.meta.owner} /></Data>
   <Data name="lamports" type="u64">{tokenSwapInfo.meta.lamports}</Data>
   <Data name="data size">{tokenSwapInfo.meta.data.length}</Data>
@@ -72,15 +72,6 @@
 {/await}
 
 <style>
-  tr.current {
-    background-color: #cfc;
-    border: 1px solid black;
-  }
-
-  tr.uninitialized {
-    background-color: lightgray;
-  }
-
   th, td {
     padding: 0.1em 0.5em;
   }

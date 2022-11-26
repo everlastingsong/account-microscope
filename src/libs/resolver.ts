@@ -7,6 +7,7 @@ import { getConnection } from "./client";
 
 const ORCA_TOKEN_SWAP_V1_ID = new PublicKey("DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1");
 const ORCA_TOKEN_SWAP_V2_ID = new PublicKey("9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP");
+const ORCA_AQUAFARM_ID = new PublicKey("82yxjeMsvaURa4MbZZ7WZZHfobirZYkH1zF8fmeGtyaQ");
 
 export type ResolvedAccount = {
   pubkey: PublicKey,
@@ -38,6 +39,13 @@ export async function resolveAccountType(addr: Address): Promise<ResolvedAccount
   if (accountInfo.owner.equals(ORCA_TOKEN_SWAP_V1_ID) || accountInfo.owner.equals(ORCA_TOKEN_SWAP_V2_ID)) {
     switch (accountInfo.data.length) {
       case 324: return { pubkey, path: "/tokenswap/swapstate" };
+    }
+  }
+
+  if (accountInfo.owner.equals(ORCA_AQUAFARM_ID)) {
+    switch (accountInfo.data.length){
+      case 283: return { pubkey, path: "/aquafarm/globalfarm" };
+      case 106: return { pubkey, path: "/aquafarm/userfarm" };
     }
   }
 
