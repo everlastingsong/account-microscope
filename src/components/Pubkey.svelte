@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Address } from "@project-serum/anchor";
   import { getRPC } from "../libs/client";
+  import { getTokenList, TokenInfo } from "../libs/orcaapi";
 
   export let address: Address;
   export let short: boolean = false;
@@ -34,6 +35,9 @@
     return url;
   }
 
+  let tokenInfo: TokenInfo|undefined = undefined;
+  getTokenList().then((list) => {tokenInfo = list.getTokenInfoByMint(address)});
+
   let toolkit;
   let clipboard;
   function copy() {
@@ -53,10 +57,14 @@
 {:else}
 <span>{address}</span>
 {/if}
+{#if tokenInfo && !tokenInfo.poolToken}
+({tokenInfo.symbol})
+{/if}
 </a>
 <span bind:this={toolkit} style="visibility: hidden;">
   {#if address}
-  <a target="_blank" href={getSolscanURL(address)}>🔍</a>
+  <a target="_blank" rel="noreferrer" href={getSolscanURL(address)}>🔍</a>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <span bind:this={clipboard} on:click={copy}>📎</span>
   {/if}
 </span>

@@ -38,7 +38,7 @@
   <Data name="traderFee" type="u64, u64">{tokenSwapInfo.parsed.traderFee.numerator} / {tokenSwapInfo.parsed.traderFee.denominator}</Data>
   <Data name="ownerFee" type="u64, u64">{tokenSwapInfo.parsed.ownerFee.numerator} / {tokenSwapInfo.parsed.ownerFee.denominator}</Data>
   <Data name="curveType" type="u8">{tokenSwapInfo.parsed.curveType}</Data>
-  {#if tokenSwapInfo.parsed.curveType === "StableCurve"}
+  {#if tokenSwapInfo.parsed.curveType === "Stable"}
   <Data name="amp" type="u64">{tokenSwapInfo.parsed.amp}</Data>
   {/if}
 </ParsedData>
@@ -57,7 +57,7 @@
   <Data name="LP token supply">{tokenSwapInfo.derived.supplyLP}</Data>
   <Data name="price">{tokenSwapInfo.derived.price}</Data>
   <Data name="fee rate">{tokenSwapInfo.derived.feeRate} %</Data>
-  <Data name="token vault amount / pool fee account amount">
+  <Data name="token vault amount">
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>amount</th></thead>
       <tbody>

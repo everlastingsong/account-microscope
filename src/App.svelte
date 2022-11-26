@@ -37,6 +37,7 @@
   	<input style="margin: 0.5em 0em;" bind:value={pubkey} type="text" size="64" placeholder="HJPjoWUrhoZzkNfRpHuieeFk9WcZWjwy6PBjZ81ngndJ" />
     <input type="submit" value="Check!" />
     <a href="#/whirlpool/list" style="font-size:smaller; text-decoration:none;">whirlpool/list</a>
+    <a href="#/tokenswap/list" style="font-size:smaller; text-decoration:none;">tokenswap/list</a>
   </form>
   <hr />
   <Router {routes} />

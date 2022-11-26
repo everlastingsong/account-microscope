@@ -12,7 +12,6 @@ import fetch from "node-fetch";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 6
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
-const V1_WHIRLPOOL_LIST = "https://api.mainnet.orca.so/v1/whirlpool/list";
 
 type NeighboringTickArray = {
   pubkey: PublicKey,
@@ -415,50 +414,4 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
       ticksInArray,
     }
   };
-}
-
-type WhirlpoolListEntry = {
-  address: PublicKey,
-  name: string,
-  symbolA: string,
-  symbolB: string,
-  mintA: PublicKey,
-  mintB: PublicKey,
-  tickSpacing: number,
-  price: Decimal,
-  usdTVL: Decimal,
-  usdVolumeDay: Decimal,
-}
-
-function whirlpoolListEntryCmp(a: WhirlpoolListEntry, b: WhirlpoolListEntry): number {
-  if ( a.symbolA < b.symbolA ) return -1;
-  if ( a.symbolA > b.symbolA ) return +1;
-  if ( a.symbolB < b.symbolB ) return -1;
-  if ( a.symbolB > b.symbolB ) return +1;
-  if ( a.tickSpacing < b.tickSpacing ) return -1;
-  if ( a.tickSpacing > b.tickSpacing ) return +1;
-  return 0;
-}
-
-export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
-  const response = await (await fetch(V1_WHIRLPOOL_LIST)).json();
-
-  const list: WhirlpoolListEntry[] = [];
-  response.whirlpools.forEach((p) => {
-    list.push({
-      address: new PublicKey(p.address),
-      name: `${p.tokenA.symbol}/${p.tokenB.symbol}(${p.tickSpacing})`,
-      symbolA: p.tokenA.symbol,
-      symbolB: p.tokenB.symbol,
-      mintA: new PublicKey(p.tokenA.mint),
-      mintB: new PublicKey(p.tokenB.mint),
-      tickSpacing: p.tickSpacing,
-      price: new Decimal(p.price),
-      usdTVL: new Decimal(p.tvl),
-      usdVolumeDay: new Decimal(p.volume.day),
-    });
-  });
-
-  list.sort(whirlpoolListEntryCmp);
-  return list;
 }

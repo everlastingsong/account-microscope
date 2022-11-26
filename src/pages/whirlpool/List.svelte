@@ -1,17 +1,8 @@
 <script lang="ts">
-  import MetaData from "../../components/MetaData.svelte";
-  import ParsedData from "../../components/ParsedData.svelte";
-  import DerivedData from "../../components/DerivedData.svelte";
-  import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
-  import Data from "../../components/Data.svelte";
-  import Pubkey from "../../components/Pubkey.svelte";
-
-  export let params;
-
   let filter;
   $: effectiveFilter = "";
 
-  import { getWhirlpoolList } from "../../libs/whirlpool";
+  import { getWhirlpoolList, WhirlpoolListEntry } from "../../libs/orcaapi";
 
   $: whirlpoolListPromise = getFilteredWhirlpoolList(effectiveFilter);
 
@@ -19,10 +10,9 @@
     effectiveFilter = filter;
   }
 
-  let _cache = null;
-  async function getFilteredWhirlpoolList(filter: string) {
-    if (!_cache) _cache = await getWhirlpoolList();
-    return _cache.filter((p) => filter.length == 0 || p.name.indexOf(filter) != -1);
+  async function getFilteredWhirlpoolList(filter: string): WhirlpoolListEntry[] {
+    const list = await getWhirlpoolList();
+    return list.filter((p) => filter.length == 0 || p.name.indexOf(filter) != -1);
   }
 </script>
 
@@ -54,10 +44,6 @@
 {/await}
 
 <style>
-  tr.uninitialized {
-    background-color: lightgray;
-  }
-
   th, td {
     padding: 0.1em 0.5em;
   }

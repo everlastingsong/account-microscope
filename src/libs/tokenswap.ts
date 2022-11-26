@@ -9,7 +9,7 @@ import { getConnection } from "./client";
 import Decimal from "decimal.js";
 
 
-type CurveType = "ConstantProduct" | "StableCurve";
+type CurveType = "ConstantProduct" | "Stable";
 
 type TokenSwapAccountInfo = {
   bumpSeed: number,
@@ -78,7 +78,7 @@ function parseTokenSwapAccount(data: Buffer): TokenSwapAccountInfo  {
     poolFeeAccount,
     traderFee: Percentage.fromFraction(traderFeeNum, traderFeeDenom),
     ownerFee: Percentage.fromFraction(ownerFeeNum, ownerFeeDenom),
-    curveType: curveType === 0 ? "ConstantProduct" : "StableCurve",
+    curveType: curveType === 0 ? "ConstantProduct" : "Stable",
     amp: curveType === 0 ? undefined : stableAmp,
   };
 }
@@ -133,13 +133,19 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
   if (tokenSwapAccountInfo.curveType === "ConstantProduct" && !amountA.isZero()) {
     price = toFixedDecimal(amountB.div(amountA), decimalsB);
   }
-  if (tokenSwapAccountInfo.curveType === "StableCurve") {
+  if (tokenSwapAccountInfo.curveType === "Stable") {
     price = DecimalUtil.fromU64(computeOutputAmount(
       new u64(1 * 10**decimalsA),
       accounts[0].amount,
       accounts[1].amount,
       new u64(tokenSwapAccountInfo.amp),
     ), decimalsB);
+  }
+
+  // get fee rate
+  let feeRate = tokenSwapAccountInfo.traderFee;
+  if (!tokenSwapAccountInfo.ownerFee.denominator.isZero()) { // V1 account's ownerFee is 0
+    feeRate = feeRate.add(tokenSwapAccountInfo.ownerFee);
   }
 
   return {
@@ -152,8 +158,8 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
       supplyLP: DecimalUtil.fromU64(mints[2].supply, mints[2].decimals),
       tokenVaultAAmount: DecimalUtil.fromU64(accounts[0].amount, mints[0].decimals),
       tokenVaultBAmount: DecimalUtil.fromU64(accounts[1].amount, mints[1].decimals),
-      poolFeeAccountAmount: DecimalUtil.fromU64(accounts[2].amount, mints[2].decimals),
-      feeRate: tokenSwapAccountInfo.ownerFee.add(tokenSwapAccountInfo.traderFee).toDecimal().mul(100),
+      poolFeeAccountAmount: DecimalUtil.fromU64(accounts[2]?.amount ?? new u64(0), mints[2].decimals), // feeAccount not found
+      feeRate: feeRate.toDecimal().mul(100),
       price,
     }
   };
