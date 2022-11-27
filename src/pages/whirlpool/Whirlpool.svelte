@@ -144,6 +144,30 @@
       </tbody>
     </table>  
   </Data>
+  <Data name="tradable amounts">
+    <table style="border-spacing: 0;">
+      <thead><th>tick index</th><th>price</th><th>tokenA</th><th>tokenB</th></thead>
+      <tbody>
+      {#each whirlpoolInfo.derived.tradableAmounts.upward.reverse() as tradableAmount}
+      <tr>
+        <td>{tradableAmount.tickIndex}</td>
+        <td>{tradableAmount.price}</td>
+        <td class="amount buy">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
+        <td class="amount">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
+      </tr>
+      {/each}
+
+      {#each whirlpoolInfo.derived.tradableAmounts.downward as tradableAmount}
+      <tr>
+        <td>{tradableAmount.tickIndex}</td>
+        <td>{tradableAmount.price}</td>
+        <td class="amount">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
+        <td class="amount sell">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
+      </tr>
+      {/each}
+      </tbody>
+    </table>  
+  </Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}
@@ -160,5 +184,17 @@
 
   th, td {
     padding: 0.1em 0.5em;
+  }
+
+  .amount {
+    text-align: right;
+  }
+
+  .buy {
+    background-color: lightpink;
+  }
+
+  .sell {
+    background-color: lightblue;
   }
 </style>

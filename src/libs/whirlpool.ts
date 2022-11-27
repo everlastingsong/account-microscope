@@ -1,7 +1,8 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray } from "@orca-so/whirlpools-sdk";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@project-serum/anchor";
+import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
@@ -52,6 +53,7 @@ type WhirlpoolDerivedInfo = {
   neighboringTickArrays: NeighboringTickArray[],
   isotopeWhirlpools: IsotopeWhirlpool[],
   oracle: PublicKey,
+  tradableAmounts: TradableAmounts,
 }
 
 type WhirlpoolInfo = {
@@ -146,6 +148,13 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   // get oracle
   const oracle = PDAUtil.getOracle(accountInfo.owner, pubkey).publicKey;
 
+  const tradableAmounts = listTradableAmounts(
+    whirlpoolData,
+    tickArrays,
+    decimalsA,
+    decimalsB,
+  );
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: whirlpoolData,
@@ -171,6 +180,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       neighboringTickArrays,
       isotopeWhirlpools,
       oracle,
+      tradableAmounts,
     }
   };
 }
@@ -414,4 +424,99 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
       ticksInArray,
     }
   };
+}
+
+type TradableAmount = {
+  tickIndex: number,
+  price: Decimal,
+  amountA: Decimal,
+  amountB: Decimal,
+}
+
+type TradableAmounts = {
+  upward: TradableAmount[],
+  downward: TradableAmount[],
+}
+
+function getTick(tickIndex: number, tickSpacing: number, tickarrays: TickArrayData[]): TickData|undefined {
+  const startTickIndex = TickUtil.getStartTickIndex(tickIndex, tickSpacing);
+  for (const tickarray of tickarrays) {
+    if (tickarray?.startTickIndex === startTickIndex)
+      return TickArrayUtil.getTickFromArray(tickarray, tickIndex, tickSpacing);
+  }
+  return undefined;
+}
+
+function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData[], decimalsA: number, decimalsB: number): TradableAmounts {
+  let tickIndex: number, nextTickIndex: number;
+  let sqrtPrice: BN, nextSqrtPrice: BN;
+  let liquidity: BN;
+  let nextPrice: Decimal;
+  let nextTick: TickData;
+
+  const tickCurrentIndex = whirlpool.tickCurrentIndex;
+  const tickSpacing = whirlpool.tickSpacing;
+  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex/tickSpacing)*tickSpacing;
+  const upperInitializableTickIndex = lowerInitializableTickIndex + tickSpacing;
+
+  // upward
+  tickIndex = whirlpool.tickCurrentIndex;
+  sqrtPrice = whirlpool.sqrtPrice;
+  liquidity = whirlpool.liquidity;
+  const upwardTradableAmount: TradableAmount[] = [];
+  for (let i=0; i<10; i++) {
+    nextTickIndex = upperInitializableTickIndex + i*tickSpacing;
+    nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
+    if ( nextTick === undefined ) nextTickIndex--;
+    if ( nextTickIndex <= tickIndex ) break;
+
+    nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
+    nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
+    const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, false);
+    const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, true);
+
+    upwardTradableAmount.push({
+      tickIndex: nextTickIndex,
+      price: nextPrice,
+      amountA: DecimalUtil.fromU64(new u64(deltaA), decimalsA),
+      amountB: DecimalUtil.fromU64(new u64(deltaB), decimalsB),
+    });
+
+    if ( nextTick === undefined ) break;
+    tickIndex = nextTickIndex;
+    sqrtPrice = nextSqrtPrice;
+    liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
+  }
+
+  // downward
+  tickIndex = whirlpool.tickCurrentIndex;
+  sqrtPrice = whirlpool.sqrtPrice;
+  liquidity = whirlpool.liquidity;
+  const downwardTradableAmount: TradableAmount[] = [];
+  for (let i=0; i<10; i++) {
+    nextTickIndex = lowerInitializableTickIndex - i*tickSpacing;
+    nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
+    if ( nextTick === undefined ) break;
+
+    nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
+    nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
+    const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, true);
+    const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, false);
+
+    downwardTradableAmount.push({
+      tickIndex: nextTickIndex,
+      price: nextPrice,
+      amountA: DecimalUtil.fromU64(new u64(deltaA), decimalsA),
+      amountB: DecimalUtil.fromU64(new u64(deltaB), decimalsB),
+    });
+
+    tickIndex = nextTickIndex;
+    sqrtPrice = nextSqrtPrice;
+    liquidity = liquidity.sub(nextTick.liquidityNet); // right to left, sub liquidityNet
+  }
+
+  return {
+    upward: upwardTradableAmount,
+    downward: downwardTradableAmount,
+  }
 }
