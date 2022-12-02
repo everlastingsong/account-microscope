@@ -148,12 +148,14 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   // get oracle
   const oracle = PDAUtil.getOracle(accountInfo.owner, pubkey).publicKey;
 
+  /*
   const tradableAmounts = listTradableAmounts(
     whirlpoolData,
     tickArrays,
     decimalsA,
     decimalsB,
-  );
+  );*/
+  const tradableAmounts: TradableAmounts = { downward: [], upward: [] };
 
   return {
     meta: toMeta(pubkey, accountInfo),
