@@ -50,8 +50,8 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
       mintB: new PublicKey(p.tokenB.mint),
       tickSpacing: p.tickSpacing,
       price: new Decimal(p.price),
-      usdTVL: new Decimal(p.tvl),
-      usdVolumeDay: new Decimal(p.volume.day),
+      usdTVL: new Decimal(p.tvl ?? 0),
+      usdVolumeDay: new Decimal(p.volume?.day ?? 0),
     });
   });
 
