@@ -145,6 +145,9 @@
     </table>  
   </Data>
   <Data name="tradable amounts">
+    {#if whirlpoolInfo.derived.tradableAmounts.error}
+    error detected 😵
+    {:else}
     <table style="border-spacing: 0;">
       <thead><th>tick index</th><th>price</th><th>tokenA</th><th>tokenB</th></thead>
       <tbody>
@@ -167,6 +170,7 @@
       {/each}
       </tbody>
     </table>  
+    {/if}
   </Data>
 </DerivedData>
 </ParsedAndDerivedData>

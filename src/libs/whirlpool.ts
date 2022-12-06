@@ -148,14 +148,17 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   // get oracle
   const oracle = PDAUtil.getOracle(accountInfo.owner, pubkey).publicKey;
 
-  /*
-  const tradableAmounts = listTradableAmounts(
-    whirlpoolData,
-    tickArrays,
-    decimalsA,
-    decimalsB,
-  );*/
-  const tradableAmounts: TradableAmounts = { downward: [], upward: [] };
+  let tradableAmounts: TradableAmounts = { downward: [], upward: [], error: true };
+  try {
+    const calculated = listTradableAmounts(
+      whirlpoolData,
+      tickArrays,
+      decimalsA,
+      decimalsB,
+    );
+    tradableAmounts = calculated
+  }
+  catch ( e ) {}
 
   return {
     meta: toMeta(pubkey, accountInfo),
@@ -438,6 +441,7 @@ type TradableAmount = {
 type TradableAmounts = {
   upward: TradableAmount[],
   downward: TradableAmount[],
+  error: boolean,
 }
 
 function getTick(tickIndex: number, tickSpacing: number, tickarrays: TickArrayData[]): TickData|undefined {
@@ -520,5 +524,6 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
   return {
     upward: upwardTradableAmount,
     downward: downwardTradableAmount,
+    error: false,
   }
 }
