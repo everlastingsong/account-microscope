@@ -10,9 +10,9 @@
     effectiveFilter = filter;
   }
 
-  async function getFilteredWhirlpoolList(filter: string): WhirlpoolListEntry[] {
+  async function getFilteredWhirlpoolList(filter: string): Promise<WhirlpoolListEntry[]> {
     const list = await getWhirlpoolList();
-    return list.filter((p) => filter.length == 0 || p.name.indexOf(filter) != -1);
+    return list.filter((p) => filter.length == 0 || p.name.toUpperCase().indexOf(filter.toUpperCase()) != -1);
   }
 </script>
 

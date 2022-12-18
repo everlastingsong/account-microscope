@@ -13,7 +13,7 @@
 
   async function getFilteredPoolConfigs(filter: string): Promise<PoolFarmDoubleDipTuple[]>  {
     const tuples = (await getPoolConfigs()).tuples;
-    return tuples.filter((t) => filter.length == 0 || t.pool.name.indexOf(filter) != -1);
+    return tuples.filter((t) => filter.length == 0 || t.pool.name.toUpperCase().indexOf(filter.toUpperCase()) != -1);
   }
 </script>
 

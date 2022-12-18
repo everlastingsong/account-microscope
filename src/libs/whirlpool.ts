@@ -60,6 +60,7 @@ type WhirlpoolDerivedInfo = {
   isotopeWhirlpools: IsotopeWhirlpool[],
   oracle: PublicKey,
   tradableAmounts: TradableAmounts,
+  tickArrayTradableAmounts: TickArrayTradableAmounts,
 }
 
 type WhirlpoolInfo = {
@@ -170,9 +171,23 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       decimalsA,
       decimalsB,
     );
-    tradableAmounts = calculated
+    tradableAmounts = calculated;
   }
-  catch ( e ) {}
+  catch ( e ) {console.log(e);}
+
+  let tickArrayTradableAmounts: TickArrayTradableAmounts = { downward: [], upward: [], error: true };
+  try {
+    const calculated = listTickArrayTradableAmounts(
+      whirlpoolData,
+      tickArrayStartIndexes,
+      tickArrayPubkeys,
+      tickArrays,
+      decimalsA,
+      decimalsB,
+    );
+    tickArrayTradableAmounts = calculated;
+  }
+  catch ( e ) {console.log(e);}
 
   return {
     meta: toMeta(pubkey, accountInfo),
@@ -205,6 +220,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       isotopeWhirlpools,
       oracle,
       tradableAmounts,
+      tickArrayTradableAmounts,
     }
   };
 }
@@ -463,6 +479,19 @@ type TradableAmounts = {
   error: boolean,
 }
 
+type TickArrayTradableAmount = {
+  tickArrayPubkey: PublicKey,
+  tickArrayData: TickArrayData,
+  amountA: Decimal,
+  amountB: Decimal,
+}
+
+type TickArrayTradableAmounts = {
+  upward: TickArrayTradableAmount[],
+  downward: TickArrayTradableAmount[],
+  error: boolean,
+}
+
 function getTick(tickIndex: number, tickSpacing: number, tickarrays: TickArrayData[]): TickData|undefined {
   const startTickIndex = TickUtil.getStartTickIndex(tickIndex, tickSpacing);
   for (const tickarray of tickarrays) {
@@ -543,6 +572,125 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
   return {
     upward: upwardTradableAmount,
     downward: downwardTradableAmount,
+    error: false,
+  }
+}
+
+function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIndexes: number[], tickArrayPubkeys: PublicKey[], tickArrays: TickArrayData[], decimalsA: number, decimalsB: number): TickArrayTradableAmounts {
+  let tickIndex: number, nextTickIndex: number;
+  let sqrtPrice: BN, nextSqrtPrice: BN;
+  let liquidity: BN;
+  let nextPrice: Decimal;
+  let nextTick: TickData;
+
+  const tickCurrentIndex = whirlpool.tickCurrentIndex;
+  const tickSpacing = whirlpool.tickSpacing;
+  const ticksInArray = tickSpacing * TICK_ARRAY_SIZE;
+  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex/tickSpacing)*tickSpacing;
+  const upperInitializableTickIndex = lowerInitializableTickIndex + tickSpacing;
+
+  const currentTickArrayStartIndex = Math.floor(tickCurrentIndex / ticksInArray) * ticksInArray;
+  const currentTickArrayIndex = (currentTickArrayStartIndex - tickArrayStartIndexes[0]) / ticksInArray;
+
+  // upward
+  let upwardTickArrayPubkeys: PublicKey[] = [];
+  let upwardTickArrays: TickArrayData[] = [];
+  let upwardAmountA: Decimal[] = [];
+  let upwardAmountB: Decimal[] = [];
+  for (let i=0; i<=3 && currentTickArrayIndex+i < tickArrayPubkeys.length; i++) {
+    upwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex+i]);
+    upwardTickArrays.push(tickArrays[currentTickArrayIndex+i]);
+    upwardAmountA.push(new Decimal(0));
+    upwardAmountB.push(new Decimal(0));
+  }
+
+  const upwardLastTickIndex = Math.min(MAX_TICK_INDEX, currentTickArrayStartIndex + 4*ticksInArray);
+  let upwardIndex = 0;
+  tickIndex = whirlpool.tickCurrentIndex;
+  sqrtPrice = whirlpool.sqrtPrice;
+  liquidity = whirlpool.liquidity;
+  for (let i=0; true; i++) {
+    nextTickIndex = upperInitializableTickIndex + i*tickSpacing;
+    if ( nextTickIndex > upwardLastTickIndex ) break;
+
+    nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
+    nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
+    const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, false);
+    const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, true);
+    const deltaADecimal = DecimalUtil.fromU64(new u64(deltaA), decimalsA);
+    const deltaBDecimal = DecimalUtil.fromU64(new u64(deltaB), decimalsB);
+
+    upwardAmountA[upwardIndex] = upwardAmountA[upwardIndex].add(deltaADecimal);
+    upwardAmountB[upwardIndex] = upwardAmountB[upwardIndex].add(deltaBDecimal);
+
+    nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
+    if ( nextTick !== undefined ) liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
+    tickIndex = nextTickIndex;
+    sqrtPrice = nextSqrtPrice;
+    if ( nextTickIndex % ticksInArray === 0 ) upwardIndex++;
+  }
+
+  // downward
+  let downwardTickArrayPubkeys: PublicKey[] = [];
+  let downwardTickArrays: TickArrayData[] = [];
+  let downwardAmountA: Decimal[] = [];
+  let downwardAmountB: Decimal[] = [];
+  for (let i=0; i<=3 && currentTickArrayIndex-i >= 0; i++) {
+    downwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex-i]);
+    downwardTickArrays.push(tickArrays[currentTickArrayIndex-i]);
+    downwardAmountA.push(new Decimal(0));
+    downwardAmountB.push(new Decimal(0));
+  }
+
+  const downwardLastTickIndex = Math.max(MIN_TICK_INDEX, currentTickArrayStartIndex - 3*ticksInArray);
+  let downwardIndex = 0;
+  tickIndex = whirlpool.tickCurrentIndex;
+  sqrtPrice = whirlpool.sqrtPrice;
+  liquidity = whirlpool.liquidity;
+  for (let i=0; true; i++) {
+    nextTickIndex = lowerInitializableTickIndex - i*tickSpacing;
+    if ( nextTickIndex < downwardLastTickIndex ) break;
+
+    nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
+    nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
+    const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, true);
+    const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, false);
+    const deltaADecimal = DecimalUtil.fromU64(new u64(deltaA), decimalsA);
+    const deltaBDecimal = DecimalUtil.fromU64(new u64(deltaB), decimalsB);
+
+    downwardAmountA[downwardIndex] = downwardAmountA[downwardIndex].add(deltaADecimal);
+    downwardAmountB[downwardIndex] = downwardAmountB[downwardIndex].add(deltaBDecimal);
+
+    nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
+    if ( nextTick !== undefined ) liquidity = liquidity.sub(nextTick.liquidityNet); // right to left, sub liquidityNet
+    tickIndex = nextTickIndex;
+    sqrtPrice = nextSqrtPrice;
+    if ( nextTickIndex % ticksInArray === 0 ) downwardIndex++;
+  }
+
+  const upwardTickArrayTradableAmount: TickArrayTradableAmount[] = [];
+  for (let i=0; i<upwardTickArrayPubkeys.length; i++) {
+    upwardTickArrayTradableAmount.push({
+      tickArrayPubkey: upwardTickArrayPubkeys[i],
+      tickArrayData: upwardTickArrays[i],
+      amountA: upwardAmountA[i],
+      amountB: upwardAmountB[i],
+    })
+  }
+
+  const downwardTickArrayTradableAmount: TickArrayTradableAmount[] = [];
+  for (let i=0; i<downwardTickArrayPubkeys.length; i++) {
+    downwardTickArrayTradableAmount.push({
+      tickArrayPubkey: downwardTickArrayPubkeys[i],
+      tickArrayData: downwardTickArrays[i],
+      amountA: downwardAmountA[i],
+      amountB: downwardAmountB[i],
+    })
+  }
+
+  return {
+    upward: upwardTickArrayTradableAmount,
+    downward: downwardTickArrayTradableAmount,
     error: false,
   }
 }
