@@ -16,6 +16,11 @@
     if (tokenInfo === undefined) return "";
     return `(${tokenInfo.symbol})`;
   }
+
+  function price_unit_if_not_undefined(baseTokenInfo: TokenInfo, quoteTokenInfo: TokenInfo): string {
+    if (baseTokenInfo === undefined || quoteTokenInfo === undefined) return "";
+    return `${quoteTokenInfo.symbol}/${baseTokenInfo.symbol}`;
+  }
 </script>
 
 <h2>🌀Whirlpool::Whirlpool</h2>
@@ -86,8 +91,8 @@
       </tbody>
     </table>  
   </Data>
-  <Data name="price">{whirlpoolInfo.derived.price}</Data>
-  <Data name="inverted price">{whirlpoolInfo.derived.invertedPrice}</Data>
+  <Data name="price">{whirlpoolInfo.derived.price} {price_unit_if_not_undefined(whirlpoolInfo.derived.tokenInfoA, whirlpoolInfo.derived.tokenInfoB)}</Data>
+  <Data name="inverted price">{whirlpoolInfo.derived.invertedPrice} {price_unit_if_not_undefined(whirlpoolInfo.derived.tokenInfoB, whirlpoolInfo.derived.tokenInfoA)}</Data>
   <Data name="fee rate">{whirlpoolInfo.derived.feeRate} %</Data>
   <Data name="protocol fee rate">{whirlpoolInfo.derived.protocolFeeRate} % of fee ({whirlpoolInfo.derived.feeRate.mul(whirlpoolInfo.derived.protocolFeeRate.div(100))} %)</Data>
   <Data name="token vault amount">

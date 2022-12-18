@@ -12,7 +12,7 @@ import Decimal from "decimal.js";
 import moment from "moment";
 import fetch from "node-fetch";
 
-const NEIGHBORING_TICK_ARRAY_NUM = 6
+const NEIGHBORING_TICK_ARRAY_NUM = 7
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 type NeighboringTickArray = {
@@ -597,14 +597,14 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   let upwardTickArrays: TickArrayData[] = [];
   let upwardAmountA: Decimal[] = [];
   let upwardAmountB: Decimal[] = [];
-  for (let i=0; i<=3 && currentTickArrayIndex+i < tickArrayPubkeys.length; i++) {
+  for (let i=0; /*i<=3 && */currentTickArrayIndex+i < tickArrayPubkeys.length; i++) {
     upwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex+i]);
     upwardTickArrays.push(tickArrays[currentTickArrayIndex+i]);
     upwardAmountA.push(new Decimal(0));
     upwardAmountB.push(new Decimal(0));
   }
 
-  const upwardLastTickIndex = Math.min(MAX_TICK_INDEX, currentTickArrayStartIndex + 4*ticksInArray);
+  const upwardLastTickIndex = Math.min(MAX_TICK_INDEX, currentTickArrayStartIndex + upwardTickArrays.length*ticksInArray);
   let upwardIndex = 0;
   tickIndex = whirlpool.tickCurrentIndex;
   sqrtPrice = whirlpool.sqrtPrice;
@@ -635,14 +635,14 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   let downwardTickArrays: TickArrayData[] = [];
   let downwardAmountA: Decimal[] = [];
   let downwardAmountB: Decimal[] = [];
-  for (let i=0; i<=3 && currentTickArrayIndex-i >= 0; i++) {
+  for (let i=0; /*i<=3 && */currentTickArrayIndex-i >= 0; i++) {
     downwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex-i]);
     downwardTickArrays.push(tickArrays[currentTickArrayIndex-i]);
     downwardAmountA.push(new Decimal(0));
     downwardAmountB.push(new Decimal(0));
   }
 
-  const downwardLastTickIndex = Math.max(MIN_TICK_INDEX, currentTickArrayStartIndex - 3*ticksInArray);
+  const downwardLastTickIndex = Math.max(MIN_TICK_INDEX, currentTickArrayStartIndex - (downwardTickArrays.length - 1)*ticksInArray);
   let downwardIndex = 0;
   tickIndex = whirlpool.tickCurrentIndex;
   sqrtPrice = whirlpool.sqrtPrice;
