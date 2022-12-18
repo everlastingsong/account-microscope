@@ -7,6 +7,7 @@ import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
+import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
 import fetch from "node-fetch";
@@ -41,6 +42,11 @@ type WhirlpoolDerivedInfo = {
   decimalsR0?: number,
   decimalsR1?: number,
   decimalsR2?: number,
+  tokenInfoA?: TokenInfo,
+  tokenInfoB?: TokenInfo,
+  tokenInfoR0?: TokenInfo,
+  tokenInfoR1?: TokenInfo,
+  tokenInfoR2?: TokenInfo,
   tokenVaultAAmount: Decimal,
   tokenVaultBAmount: Decimal,
   tokenVaultR0Amount?: Decimal,
@@ -92,6 +98,14 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   vaultPubkeys.push(whirlpoolData.rewardInfos[1].vault);
   vaultPubkeys.push(whirlpoolData.rewardInfos[2].vault);
   const vaults = await fetcher.listTokenInfos(vaultPubkeys, true);
+
+  // get token name
+  const tokenList = await getTokenList();
+  const tokenInfoA = tokenList.getTokenInfoByMint(mintPubkeys[0]);
+  const tokenInfoB = tokenList.getTokenInfoByMint(mintPubkeys[1]);
+  const tokenInfoR0 = tokenList.getTokenInfoByMint(mintPubkeys[2]);
+  const tokenInfoR1 = tokenList.getTokenInfoByMint(mintPubkeys[3]);
+  const tokenInfoR2 = tokenList.getTokenInfoByMint(mintPubkeys[4]);
 
   // get neighboring tickarrays
   const ticksInArray = whirlpoolData.tickSpacing * TICK_ARRAY_SIZE;
@@ -173,6 +187,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       decimalsR0,
       decimalsR1,
       decimalsR2,
+      tokenInfoA,
+      tokenInfoB,
+      tokenInfoR0,
+      tokenInfoR1,
+      tokenInfoR2,
       tokenVaultAAmount: DecimalUtil.fromU64(vaults[0].amount, decimalsA),
       tokenVaultBAmount: DecimalUtil.fromU64(vaults[1].amount, decimalsB),
       tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromU64(vaults[2].amount, decimalsR0),

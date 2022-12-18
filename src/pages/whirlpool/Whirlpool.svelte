@@ -10,6 +10,12 @@
 
   import { getWhirlpoolInfo } from "../../libs/whirlpool";
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
+
+  import { TokenInfo } from "../../libs/orcaapi";
+  function symbol_if_not_undefined(tokenInfo: TokenInfo): string {
+    if (tokenInfo === undefined) return "";
+    return `(${tokenInfo.symbol})`;
+  }
 </script>
 
 <h2>🌀Whirlpool::Whirlpool</h2>
@@ -72,11 +78,11 @@
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>decimals</th></thead>
       <tbody>
-        <tr><td>A</td><td>{whirlpoolInfo.derived.decimalsA}</td></tr>
-        <tr><td>B</td><td>{whirlpoolInfo.derived.decimalsB}</td></tr>
-        <tr><td>reward0</td><td>{whirlpoolInfo.derived.decimalsR0}</td></tr>
-        <tr><td>reward1</td><td>{whirlpoolInfo.derived.decimalsR1}</td></tr>
-        <tr><td>reward2</td><td>{whirlpoolInfo.derived.decimalsR2}</td></tr>
+        <tr><td>A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</td><td>{whirlpoolInfo.derived.decimalsA}</td></tr>
+        <tr><td>B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</td><td>{whirlpoolInfo.derived.decimalsB}</td></tr>
+        <tr><td>reward0{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR0)}</td><td>{whirlpoolInfo.derived.decimalsR0}</td></tr>
+        <tr><td>reward1{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR1)}</td><td>{whirlpoolInfo.derived.decimalsR1}</td></tr>
+        <tr><td>reward2{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR2)}</td><td>{whirlpoolInfo.derived.decimalsR2}</td></tr>
       </tbody>
     </table>  
   </Data>
@@ -88,11 +94,11 @@
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>amount</th></thead>
       <tbody>
-        <tr><td>A</td><td>{whirlpoolInfo.derived.tokenVaultAAmount}</td></tr>
-        <tr><td>B</td><td>{whirlpoolInfo.derived.tokenVaultBAmount}</td></tr>
-        <tr><td>reward0</td><td>{whirlpoolInfo.derived.tokenVaultR0Amount}</td></tr>
-        <tr><td>reward1</td><td>{whirlpoolInfo.derived.tokenVaultR1Amount}</td></tr>
-        <tr><td>reward2</td><td>{whirlpoolInfo.derived.tokenVaultR2Amount}</td></tr>
+        <tr><td>A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</td><td>{whirlpoolInfo.derived.tokenVaultAAmount}</td></tr>
+        <tr><td>B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</td><td>{whirlpoolInfo.derived.tokenVaultBAmount}</td></tr>
+        <tr><td>reward0{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR0)}</td><td>{whirlpoolInfo.derived.tokenVaultR0Amount}</td></tr>
+        <tr><td>reward1{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR1)}</td><td>{whirlpoolInfo.derived.tokenVaultR1Amount}</td></tr>
+        <tr><td>reward2{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR2)}</td><td>{whirlpoolInfo.derived.tokenVaultR2Amount}</td></tr>
       </tbody>
     </table>  
   </Data>
@@ -100,9 +106,9 @@
     <table style="border-spacing: 0;">
       <thead><th>reward</th><th>emission</th></thead>
       <tbody>
-        <tr><td>reward0</td><td>{whirlpoolInfo.derived.reward0WeeklyEmission}</td></tr>
-        <tr><td>reward1</td><td>{whirlpoolInfo.derived.reward1WeeklyEmission}</td></tr>
-        <tr><td>reward2</td><td>{whirlpoolInfo.derived.reward2WeeklyEmission}</td></tr>
+        <tr><td>reward0{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR0)}</td><td>{whirlpoolInfo.derived.reward0WeeklyEmission}</td></tr>
+        <tr><td>reward1{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR1)}</td><td>{whirlpoolInfo.derived.reward1WeeklyEmission}</td></tr>
+        <tr><td>reward2{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR2)}</td><td>{whirlpoolInfo.derived.reward2WeeklyEmission}</td></tr>
       </tbody>
     </table>  
   </Data>
@@ -112,18 +118,18 @@
     <table style="border-spacing: 0;">
     <thead><th>current</th><th>initialized</th><th>start tick</th><th>start price</th><th>pubkey</th></thead>
     <tbody>
-    <tr><td colspan="5">A to B direction (price down)</td></tr>
-    {#each whirlpoolInfo.derived.neighboringTickArrays as tickArray}
+    <tr><td colspan="5">B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} to A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} direction (price up)</td></tr>
+    {#each whirlpoolInfo.derived.neighboringTickArrays.reverse() as tickArray}
     <!--tr class="{tickArray.hasTickCurrentIndex ? "current" : (tickArray.isInitialized ? "initialized" : "uninitialized")}"-->
     <tr class="{tickArray.isInitialized ? (tickArray.hasTickCurrentIndex ? "current" : "initialized") : "uninitialized"}">
-      <td>{tickArray.hasTickCurrentIndex}{tickArray.hasTickCurrentIndex ? " 📍" : ""}</td>
+      <td>{tickArray.hasTickCurrentIndex}{tickArray.hasTickCurrentIndex ? ` 📍(${whirlpoolInfo.parsed.tickCurrentIndex})` : ""}</td>
       <td>{tickArray.isInitialized}</td>
       <td>{tickArray.startTickIndex}</td>
       <td>{tickArray.startPrice}</td>
       <td><Pubkey type="whirlpool/tickarray" address={tickArray.pubkey} short/></td>
     </tr>
     {/each}
-    <tr><td colspan="5">B to A direction (price up)</td></tr>
+    <tr><td colspan="5">A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} to B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} direction (price down)</td></tr>
     </tbody>
     </table>
   </Data>
@@ -149,8 +155,9 @@
     error detected 😵
     {:else}
     <table style="border-spacing: 0;">
-      <thead><th>tick index</th><th>price</th><th>tokenA</th><th>tokenB</th></thead>
+      <thead><th>tick index</th><th>price</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th></thead>
       <tbody>
+      <tr><td colspan="4">B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} to A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} direction (price up)</td></tr>
       {#each whirlpoolInfo.derived.tradableAmounts.upward.reverse() as tradableAmount}
       <tr>
         <td>{tradableAmount.tickIndex}</td>
@@ -168,6 +175,7 @@
         <td class="amount sell">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
       </tr>
       {/each}
+      <tr><td colspan="4">A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} to B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} direction (price down)</td></tr>
       </tbody>
     </table>  
     {/if}
