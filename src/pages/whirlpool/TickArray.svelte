@@ -5,14 +5,15 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getTickArrayInfo } from "../../libs/whirlpool";
+  import { getTickArrayInfo, ACCOUNT_DEFINITION } from "../../libs/whirlpool";
   $: tickArrayInfoPromise = getTickArrayInfo(params.pubkey);
 </script>
 
-<h2>🌀Whirlpool::TickArray</h2>
+<h2>🌀Whirlpool::TickArray <AccountDefinition href="{ACCOUNT_DEFINITION.TickArray}" /></h2>
 
 {#await tickArrayInfoPromise}
   loading...

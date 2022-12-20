@@ -22,7 +22,7 @@ export type RPC = {
 const _rpclist: RPC[] = [
   { id: "anker", name: "Mainnet Anker", network: "mainnet", url: "https://rpc.ankr.com/solana" },
   { id: "solana", name: "Mainnet Solana", network: "mainnet", url: "https://api.mainnet-beta.solana.com" },
-  { id: "serum", name: "Mainnet Serum", network: "mainnet", url: "https://solana-api.projectserum.com" },
+  // { id: "serum", name: "Mainnet Serum", network: "mainnet", url: "https://solana-api.projectserum.com" },
   { id: "devnet", name: "Devnet Solana", network: "devnet", url: "https://api.devnet.solana.com" },
   { id: "localnet", name: "Test Validator", network: "localnet", url: "http://localhost:8899" },
 ];

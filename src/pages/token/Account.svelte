@@ -5,14 +5,15 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getTokenAccountInfo } from "../../libs/token";
+  import { getTokenAccountInfo, ACCOUNT_DEFINITION } from "../../libs/token";
   $: tokenAccountInfoPromise = getTokenAccountInfo(params.pubkey);
 </script>
 
-<h2>🪙Token::Account</h2>
+<h2>🪙Token::Account <AccountDefinition href="{ACCOUNT_DEFINITION.Account}" /></h2>
 
 {#await tokenAccountInfoPromise}
   loading...

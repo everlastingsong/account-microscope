@@ -5,14 +5,26 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getTokenSwapInfo } from "../../libs/tokenswap";
+  import { getTokenSwapInfo, ACCOUNT_DEFINITION } from "../../libs/tokenswap";
   $: infoPromise = getTokenSwapInfo(params.pubkey);
+
+  import { TokenInfo } from "../../libs/orcaapi";
+  function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
+    if (tokenInfo === undefined) return "";
+    return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
+  }
+
+  function price_unit_if_not_undefined(baseTokenInfo: TokenInfo, quoteTokenInfo: TokenInfo): string {
+    if (baseTokenInfo === undefined || quoteTokenInfo === undefined) return "";
+    return `${quoteTokenInfo.symbol}/${baseTokenInfo.symbol}`;
+  }
 </script>
 
-<h2>⚖️TokenSwap::SwapState</h2>
+<h2>⚖️TokenSwap::SwapState <AccountDefinition href="{ACCOUNT_DEFINITION.TokenSwap}" /></h2>
   
 {#await infoPromise}
   loading...
@@ -59,21 +71,21 @@
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>decimals</th></thead>
       <tbody>
-        <tr><td>A</td><td>{info.derived.decimalsA}</td></tr>
-        <tr><td>B</td><td>{info.derived.decimalsB}</td></tr>
+        <tr><td>A{symbol_if_not_undefined(info.derived.tokenInfoA)}</td><td>{info.derived.decimalsA}</td></tr>
+        <tr><td>B{symbol_if_not_undefined(info.derived.tokenInfoB)}</td><td>{info.derived.decimalsB}</td></tr>
         <tr><td>LP</td><td>{info.derived.decimalsLP}</td></tr>
       </tbody>
     </table>  
   </Data>
   <Data name="LP token supply">{info.derived.supplyLP}</Data>
-  <Data name="price">{info.derived.price}</Data>
+  <Data name="price">{info.derived.price} {price_unit_if_not_undefined(info.derived.tokenInfoA, info.derived.tokenInfoB)}</Data>
   <Data name="fee rate">{info.derived.feeRate} %</Data>
   <Data name="token vault amount">
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>amount</th></thead>
       <tbody>
-        <tr><td>A</td><td>{info.derived.tokenVaultAAmount}</td></tr>
-        <tr><td>B</td><td>{info.derived.tokenVaultBAmount}</td></tr>
+        <tr><td>A{symbol_if_not_undefined(info.derived.tokenInfoA)}</td><td>{info.derived.tokenVaultAAmount}</td></tr>
+        <tr><td>B{symbol_if_not_undefined(info.derived.tokenInfoB)}</td><td>{info.derived.tokenVaultBAmount}</td></tr>
       </tbody>
     </table>  
   </Data>

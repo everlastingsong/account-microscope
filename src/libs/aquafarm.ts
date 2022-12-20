@@ -12,6 +12,10 @@ import { getPoolConfigs } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
 
+export const ACCOUNT_DEFINITION = {
+  UserFarm: "https://github.com/orca-so/aquafarm-sdk/blob/main/src/utils/layout.ts#L163",
+  GlobalFarm: "https://github.com/orca-so/aquafarm-sdk/blob/main/src/utils/layout.ts#L102",
+}
 
 type UserFarmDerivedInfo = {
   baseTokensConverted: Decimal,

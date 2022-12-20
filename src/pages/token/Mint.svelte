@@ -5,14 +5,15 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getMintInfo } from "../../libs/token";
+  import { getMintInfo, ACCOUNT_DEFINITION } from "../../libs/token";
   $: mintInfoPromise = getMintInfo(params.pubkey);
 </script>
 
-<h2>🪙Token::Mint</h2>
+<h2>🪙Token::Mint <AccountDefinition href="{ACCOUNT_DEFINITION.Mint}" /></h2>
 
 {#await mintInfoPromise}
   loading...

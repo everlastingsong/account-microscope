@@ -5,15 +5,16 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getGlobalFarmInfo } from "../../libs/aquafarm";
+  import { getGlobalFarmInfo, ACCOUNT_DEFINITION } from "../../libs/aquafarm";
     import { derived } from "svelte/store";
   $: infoPromise = getGlobalFarmInfo(params.pubkey);
 </script>
 
-<h2>🐋AquaFarm::GlobalFarm</h2>
+<h2>🐋AquaFarm::GlobalFarm <AccountDefinition href="{ACCOUNT_DEFINITION.GlobalFarm}" /></h2>
   
 {#await infoPromise}
   loading...

@@ -5,16 +5,17 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getWhirlpoolInfo } from "../../libs/whirlpool";
+  import { getWhirlpoolInfo, ACCOUNT_DEFINITION } from "../../libs/whirlpool";
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
 
   import { TokenInfo } from "../../libs/orcaapi";
-  function symbol_if_not_undefined(tokenInfo: TokenInfo): string {
+  function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
     if (tokenInfo === undefined) return "";
-    return `(${tokenInfo.symbol})`;
+    return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
   }
 
   function price_unit_if_not_undefined(baseTokenInfo: TokenInfo, quoteTokenInfo: TokenInfo): string {
@@ -23,7 +24,7 @@
   }
 </script>
 
-<h2>🌀Whirlpool::Whirlpool</h2>
+<h2>🌀Whirlpool::Whirlpool <AccountDefinition href="{ACCOUNT_DEFINITION.Whirlpool}" /></h2>
 
 {#await whirlpoolInfoPromise}
   loading...

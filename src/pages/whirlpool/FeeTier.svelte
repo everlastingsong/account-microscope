@@ -5,14 +5,15 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getFeeTierInfo } from "../../libs/whirlpool";
+  import { getFeeTierInfo, ACCOUNT_DEFINITION } from "../../libs/whirlpool";
   $: feeTierInfoPromise = getFeeTierInfo(params.pubkey);
 </script>
 
-<h2>🌀Whirlpool::FeeTier</h2>
+<h2>🌀Whirlpool::FeeTier <AccountDefinition href="{ACCOUNT_DEFINITION.FeeTier}" /></h2>
 
 {#await feeTierInfoPromise}
   loading...

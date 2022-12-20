@@ -7,6 +7,11 @@ import { AccountMetaInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import Decimal from "decimal.js";
 
+export const ACCOUNT_DEFINITION = {
+  Mint: "https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/state.rs#L16",
+  Account: "https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/state.rs#L86",
+}
+
 type TokenAccountDerivedInfo = {
   decimals: number,
   amount: Decimal,

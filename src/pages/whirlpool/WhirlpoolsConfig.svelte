@@ -5,14 +5,15 @@
   import ParsedAndDerivedData from "../../components/ParsedAndDerivedData.svelte";
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
+  import AccountDefinition from "../../components/AccountDefinition.svelte";
 
   export let params;
 
-  import { getWhirlpoolsConfigInfo } from "../../libs/whirlpool";
+  import { getWhirlpoolsConfigInfo, ACCOUNT_DEFINITION } from "../../libs/whirlpool";
   $: configInfoPromise = getWhirlpoolsConfigInfo(params.pubkey);
 </script>
 
-<h2>🌀Whirlpool::WhirlpoolsConfig</h2>
+<h2>🌀Whirlpool::WhirlpoolsConfig <AccountDefinition href="{ACCOUNT_DEFINITION.WhirlpoolsConfig}" /></h2>
 
 {#await configInfoPromise}
   loading...

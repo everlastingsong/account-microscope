@@ -10,10 +10,17 @@ import { getConnection } from "./client";
 import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
-import fetch from "node-fetch";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 7
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+
+export const ACCOUNT_DEFINITION = {
+  Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
+  Position: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position.rs#L20",
+  WhirlpoolsConfig: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/config.rs#L6",
+  FeeTier: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/fee_tier.rs#L12",
+  TickArray: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/tick.rs#L143",
+}
 
 type NeighboringTickArray = {
   pubkey: PublicKey,
@@ -233,6 +240,11 @@ type PositionDerivedInfo = {
   amounts: TokenAmounts,
   amountA: Decimal,
   amountB: Decimal,
+  tokenInfoA?: TokenInfo,
+  tokenInfoB?: TokenInfo,
+  tokenInfoR0?: TokenInfo,
+  tokenInfoR1?: TokenInfo,
+  tokenInfoR2?: TokenInfo,
   feeQuote: CollectFeesQuote,
   feeAmountA: Decimal,
   feeAmountB: Decimal,
@@ -245,6 +257,8 @@ type PositionDerivedInfo = {
   tickCurrentIndex: number,
   currentPrice: Decimal,
   poolLiquidity: BN,
+  lowerTickArray: PublicKey,
+  upperTickArray: PublicKey,
 }
 
 type PositionInfo = {
@@ -320,6 +334,14 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
     whirlpool: whirlpoolData,
   });
 
+  // get token name
+  const tokenList = await getTokenList();
+  const tokenInfoA = tokenList.getTokenInfoByMint(mintPubkeys[0]);
+  const tokenInfoB = tokenList.getTokenInfoByMint(mintPubkeys[1]);
+  const tokenInfoR0 = tokenList.getTokenInfoByMint(mintPubkeys[2]);
+  const tokenInfoR1 = tokenList.getTokenInfoByMint(mintPubkeys[3]);
+  const tokenInfoR2 = tokenList.getTokenInfoByMint(mintPubkeys[4]);
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: positionData,
@@ -331,6 +353,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       amounts,
       amountA: DecimalUtil.fromU64(amounts.tokenA, decimalsA),
       amountB: DecimalUtil.fromU64(amounts.tokenB, decimalsB),
+      tokenInfoA,
+      tokenInfoB,
+      tokenInfoR0,
+      tokenInfoR1,
+      tokenInfoR2,
       feeQuote,
       feeAmountA: DecimalUtil.fromU64(feeQuote.feeOwedA, decimalsA),
       feeAmountB: DecimalUtil.fromU64(feeQuote.feeOwedB, decimalsB),
@@ -343,6 +370,8 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
       currentPrice: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB), decimalsB),
       poolLiquidity: whirlpoolData.liquidity,
+      lowerTickArray: tickArrayPubkeys[0],
+      upperTickArray: tickArrayPubkeys[1],
     }
   };
 }

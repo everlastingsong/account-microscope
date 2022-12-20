@@ -7,8 +7,12 @@ import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
 import { getPoolConfigs } from "./orcaapi";
 import { getConnection } from "./client";
+import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
 
+export const ACCOUNT_DEFINITION = {
+  TokenSwap: "https://github.com/solana-labs/solana-program-library/blob/master/token-swap/program/src/state.rs#L104",
+}
 
 type CurveType = "ConstantProduct" | "Stable";
 
@@ -89,6 +93,8 @@ type TokenSwapDerivedInfo = {
   decimalsA: number,
   decimalsB: number,
   decimalsLP: number,
+  tokenInfoA?: TokenInfo,
+  tokenInfoB?: TokenInfo,
   supplyLP: Decimal,
   tokenVaultAAmount: Decimal,
   tokenVaultBAmount: Decimal,
@@ -119,6 +125,11 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
     tokenSwapAccountInfo.mintB,
     tokenSwapAccountInfo.poolMint,
   ], true);
+
+  // get token name
+  const tokenList = await getTokenList();
+  const tokenInfoA = tokenList.getTokenInfoByMint(tokenSwapAccountInfo.mintA);
+  const tokenInfoB = tokenList.getTokenInfoByMint(tokenSwapAccountInfo.mintB);
 
   // get accounts
   const accounts = await fetcher.listTokenInfos([
@@ -165,6 +176,8 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
       decimalsA: mints[0].decimals,
       decimalsB: mints[1].decimals,
       decimalsLP: mints[2].decimals,
+      tokenInfoA,
+      tokenInfoB,
       supplyLP: DecimalUtil.fromU64(mints[2].supply, mints[2].decimals),
       tokenVaultAAmount: DecimalUtil.fromU64(accounts[0].amount, mints[0].decimals),
       tokenVaultBAmount: DecimalUtil.fromU64(accounts[1].amount, mints[1].decimals),
