@@ -36,6 +36,21 @@
 
 <DerivedData>
   <Data name="supply">{mintInfo.derived.supply}</Data>
+  <Data name="largest holders (Solscan)">
+    <table style="border-spacing: 0;">
+      <thead><th>owner</th><th>address</th><th>amount<th></thead>
+      <tbody>
+      {#each mintInfo.derived.largestHolders as holder}
+      <tr>
+        <td><Pubkey address={holder.owner} short /></td>
+        <td><Pubkey address={holder.address} short /></td>
+        <td>{holder.decimalAmount}</td>
+      </tr>
+      {/each}
+      </tbody>
+    </table>  
+  </Data>
+
   <Data name="is whirlpool position mint">{mintInfo.derived.whirlpoolPosition !== undefined}</Data>
   {#if mintInfo.derived.whirlpoolPosition !== undefined}
   <Data name="whirlpool position"><Pubkey type="whirlpool/position" address={mintInfo.derived.whirlpoolPosition} /></Data>

@@ -16,7 +16,7 @@
   }
 </script>
 
-<h2>🌀Whirlpool</h2>
+<h2>🌀Whirlpool::list</h2>
 <form on:submit|preventDefault={onSubmit} style="margin-bottom: 1em;">
   <input style="margin: 0.5em 0em;" bind:value={filter} type="text" size="64" placeholder="SOL/USDC" />
   <input type="submit" value="Set Filter!" />

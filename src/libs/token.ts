@@ -1,10 +1,12 @@
 import { AccountFetcher, ORCA_WHIRLPOOL_PROGRAM_ID, ParsableMintInfo, ParsableTokenInfo, PDAUtil } from "@orca-so/whirlpools-sdk";
 import { Address } from "@project-serum/anchor";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TokenAccountBalancePair } from "@solana/web3.js";
+import { u64 } from "@solana/spl-token";
 import { MintInfo as SplMintInfo, AccountInfo as SplAccountInfo } from "@solana/spl-token";
 import { AccountMetaInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
+import { getTokenHolders, TokenHolderEntry } from "./solscanapi";
 import Decimal from "decimal.js";
 
 export const ACCOUNT_DEFINITION = {
@@ -25,6 +27,7 @@ type TokenAccountInfo = {
 
 type MintDerivedInfo = {
   supply: Decimal,
+  largestHolders: TokenHolderEntry[],
   whirlpoolPosition?: PublicKey,
 }
 
@@ -67,11 +70,15 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const positionPubkey = PDAUtil.getPosition(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
   const position = await fetcher.getPosition(positionPubkey, true);
 
+  // top 10 holders
+  const largestHolders = await getTokenHolders(pubkey);
+  
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: splMintInfo,
     derived: {
       supply: DecimalUtil.fromU64(splMintInfo.supply, splMintInfo.decimals),
+      largestHolders,
       whirlpoolPosition: position === null ? undefined : positionPubkey,
     }
   };
