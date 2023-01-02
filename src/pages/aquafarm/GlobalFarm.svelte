@@ -29,19 +29,19 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="nonce" type="u8">{info.parsed.nonce}</Data>
-  <Data name="tokenProgramId" type="PublicKey"><Pubkey address={info.parsed.tokenProgramId} /></Data>
-  <Data name="emissionsAuthority" type="PublicKey"><Pubkey address={info.parsed.emissionsAuthority} /></Data>
-  <Data name="removeRewardsAuthority" type="PublicKey"><Pubkey address={info.parsed.removeRewardsAuthority} /></Data>
+  <Data name="nonce" type="u8" offset="2">{info.parsed.nonce}</Data>
+  <Data name="tokenProgramId" type="PublicKey" offset="3"><Pubkey address={info.parsed.tokenProgramId} /></Data>
+  <Data name="emissionsAuthority" type="PublicKey" offset="35"><Pubkey address={info.parsed.emissionsAuthority} /></Data>
+  <Data name="removeRewardsAuthority" type="PublicKey" offset="67"><Pubkey address={info.parsed.removeRewardsAuthority} /></Data>
 
-  <Data name="baseTokenMint" type="PublicKey"><Pubkey type="token/mint" address={info.parsed.baseTokenMint} /></Data>
-  <Data name="baseTokenVault" type="PublicKey"><Pubkey type="token/account" address={info.parsed.baseTokenVault} /></Data>
-  <Data name="rewardTokenVault" type="PublicKey"><Pubkey type="token/account" address={info.parsed.rewardTokenVault} /></Data>
-  <Data name="farmTokenMint" type="PublicKey"><Pubkey type="token/mint" address={info.parsed.farmTokenMint} /></Data>
+  <Data name="baseTokenMint" type="PublicKey" offset="99"><Pubkey type="token/mint" address={info.parsed.baseTokenMint} /></Data>
+  <Data name="baseTokenVault" type="PublicKey" offset="131"><Pubkey type="token/account" address={info.parsed.baseTokenVault} /></Data>
+  <Data name="rewardTokenVault" type="PublicKey" offset="163"><Pubkey type="token/account" address={info.parsed.rewardTokenVault} /></Data>
+  <Data name="farmTokenMint" type="PublicKey" offset="195"><Pubkey type="token/mint" address={info.parsed.farmTokenMint} /></Data>
 
-  <Data name="emissionsPerSecondNumerator/Denominator" type="u64, u64">{info.parsed.emissionsPerSecondNumerator} / {info.parsed.emissionsPerSecondDenominator}</Data>
-  <Data name="lastUpdatedTimestamp" type="u64">{info.parsed.lastUpdatedTimestamp}</Data>
-  <Data name="cumulativeEmissionsPerFarmToken" type="u256">{info.parsed.cumulativeEmissionsPerFarmToken}</Data>
+  <Data name="emissionsPerSecondNumerator/Denominator" type="u64, u64" offset="u64(227)+u64(235)">{info.parsed.emissionsPerSecondNumerator} / {info.parsed.emissionsPerSecondDenominator}</Data>
+  <Data name="lastUpdatedTimestamp" type="u64" offset="243">{info.parsed.lastUpdatedTimestamp}</Data>
+  <Data name="cumulativeEmissionsPerFarmToken" type="u256" offset="251">{info.parsed.cumulativeEmissionsPerFarmToken}</Data>
 </ParsedData>
 
 <DerivedData>

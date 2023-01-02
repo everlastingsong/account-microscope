@@ -39,26 +39,26 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="whirlpool" type="PublicKey"><Pubkey type="whirlpool/whirlpool" address={positionInfo.parsed.whirlpool} /></Data>
-  <Data name="positionMint" type="PublicKey"><Pubkey type="token/mint" address={positionInfo.parsed.positionMint} /></Data>
-  <Data name="liquidity" type="u128">{positionInfo.parsed.liquidity}</Data>
-  <Data name="tickLowerIndex" type="i32">{positionInfo.parsed.tickLowerIndex}</Data>
-  <Data name="tickUpperIndex" type="i32">{positionInfo.parsed.tickUpperIndex}</Data>
-  <Data name="feeGrowthCheckpointA" type="u128">{positionInfo.parsed.feeGrowthCheckpointA}</Data>
-  <Data name="feeGrowthCheckpointB" type="u128">{positionInfo.parsed.feeGrowthCheckpointB}</Data>
-  <Data name="feeOwedA" type="u64">{positionInfo.parsed.feeOwedA}</Data>
-  <Data name="feeOwedB" type="u64">{positionInfo.parsed.feeOwedB}</Data>
+  <Data name="whirlpool" type="PublicKey" offset="8"><Pubkey type="whirlpool/whirlpool" address={positionInfo.parsed.whirlpool} /></Data>
+  <Data name="positionMint" type="PublicKey" offset="40"><Pubkey type="token/mint" address={positionInfo.parsed.positionMint} /></Data>
+  <Data name="liquidity" type="u128" offset="72">{positionInfo.parsed.liquidity}</Data>
+  <Data name="tickLowerIndex" type="i32" offset="88">{positionInfo.parsed.tickLowerIndex}</Data>
+  <Data name="tickUpperIndex" type="i32" offset="92">{positionInfo.parsed.tickUpperIndex}</Data>
+  <Data name="feeGrowthCheckpointA" type="u128" offset="96">{positionInfo.parsed.feeGrowthCheckpointA}</Data>
+  <Data name="feeGrowthCheckpointB" type="u128" offset="120">{positionInfo.parsed.feeGrowthCheckpointB}</Data>
+  <Data name="feeOwedA" type="u64" offset="112">{positionInfo.parsed.feeOwedA}</Data>
+  <Data name="feeOwedB" type="u64" offset="136">{positionInfo.parsed.feeOwedB}</Data>
   <Data name="rewardInfos[0]">
-    <Data name="amountOwed" type="u64">{positionInfo.parsed.rewardInfos[0].amountOwed}</Data>
-    <Data name="growthInsideCheckpoint" type="u128">{positionInfo.parsed.rewardInfos[0].growthInsideCheckpoint}</Data>
+    <Data name="amountOwed" type="u64" offset="160">{positionInfo.parsed.rewardInfos[0].amountOwed}</Data>
+    <Data name="growthInsideCheckpoint" type="u128" offset="144">{positionInfo.parsed.rewardInfos[0].growthInsideCheckpoint}</Data>
   </Data>
   <Data name="rewardInfos[1]">
-    <Data name="amountOwed" type="u64">{positionInfo.parsed.rewardInfos[1].amountOwed}</Data>
-    <Data name="growthInsideCheckpoint" type="u128">{positionInfo.parsed.rewardInfos[1].growthInsideCheckpoint}</Data>
+    <Data name="amountOwed" type="u64" offset="184">{positionInfo.parsed.rewardInfos[1].amountOwed}</Data>
+    <Data name="growthInsideCheckpoint" type="u128" offset="168">{positionInfo.parsed.rewardInfos[1].growthInsideCheckpoint}</Data>
   </Data>
   <Data name="rewardInfos[2]">
-    <Data name="amountOwed" type="u64">{positionInfo.parsed.rewardInfos[2].amountOwed}</Data>
-    <Data name="growthInsideCheckpoint" type="u128">{positionInfo.parsed.rewardInfos[2].growthInsideCheckpoint}</Data>
+    <Data name="amountOwed" type="u64" offset="208">{positionInfo.parsed.rewardInfos[2].amountOwed}</Data>
+    <Data name="growthInsideCheckpoint" type="u128" offset="192">{positionInfo.parsed.rewardInfos[2].growthInsideCheckpoint}</Data>
   </Data>
 </ParsedData>
 

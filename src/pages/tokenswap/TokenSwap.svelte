@@ -39,19 +39,19 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="bumpSeed" type="u8">{info.parsed.bumpSeed}</Data>
-  <Data name="tokenProgram" type="PublicKey"><Pubkey address={info.parsed.tokenProgramId} /></Data>
-  <Data name="vaultA" type="PublicKey"><Pubkey type="token/account" address={info.parsed.vaultA} /></Data>
-  <Data name="vaultB" type="PublicKey"><Pubkey type="token/account" address={info.parsed.vaultB} /></Data>
-  <Data name="poolMint" type="PublicKey"><Pubkey type="token/mint" address={info.parsed.poolMint} /></Data>
-  <Data name="mintA" type="PublicKey"><Pubkey type="token/mint" address={info.parsed.mintA} /></Data>
-  <Data name="mintB" type="PublicKey"><Pubkey type="token/mint" address={info.parsed.mintB} /></Data>
-  <Data name="poolFeeAccount" type="PublicKey"><Pubkey type="token/account" address={info.parsed.poolFeeAccount} /></Data>
-  <Data name="traderFee" type="u64, u64">{info.parsed.traderFee.numerator} / {info.parsed.traderFee.denominator}</Data>
-  <Data name="ownerFee" type="u64, u64">{info.parsed.ownerFee.numerator} / {info.parsed.ownerFee.denominator}</Data>
-  <Data name="curveType" type="u8">{info.parsed.curveType}</Data>
+  <Data name="bumpSeed" type="u8" offset="2">{info.parsed.bumpSeed}</Data>
+  <Data name="tokenProgram" type="PublicKey" offset="3"><Pubkey address={info.parsed.tokenProgramId} /></Data>
+  <Data name="vaultA" type="PublicKey" offset="35"><Pubkey type="token/account" address={info.parsed.vaultA} /></Data>
+  <Data name="vaultB" type="PublicKey" offset="67"><Pubkey type="token/account" address={info.parsed.vaultB} /></Data>
+  <Data name="poolMint" type="PublicKey" offset="99"><Pubkey type="token/mint" address={info.parsed.poolMint} /></Data>
+  <Data name="mintA" type="PublicKey" offset="131"><Pubkey type="token/mint" address={info.parsed.mintA} /></Data>
+  <Data name="mintB" type="PublicKey" offset="163"><Pubkey type="token/mint" address={info.parsed.mintB} /></Data>
+  <Data name="poolFeeAccount" type="PublicKey" offset="195"><Pubkey type="token/account" address={info.parsed.poolFeeAccount} /></Data>
+  <Data name="traderFee" type="u64, u64" offset="u64(227)+u64(235)">{info.parsed.traderFee.numerator} / {info.parsed.traderFee.denominator}</Data>
+  <Data name="ownerFee" type="u64, u64" offset="u64(243)+u64(251)">{info.parsed.ownerFee.numerator} / {info.parsed.ownerFee.denominator}</Data>
+  <Data name="curveType" type="u8" offset="283">{info.parsed.curveType}</Data>
   {#if info.parsed.curveType === "Stable"}
-  <Data name="amp" type="u64">{info.parsed.amp}</Data>
+  <Data name="amp" type="u64" offset="284">{info.parsed.amp}</Data>
   {/if}
 </ParsedData>
 

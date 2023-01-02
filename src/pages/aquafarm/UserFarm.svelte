@@ -28,10 +28,10 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="globalFarm" type="PublicKey"><Pubkey type="aquafarm/globalfarm" address={info.parsed.globalFarm} /></Data>
-  <Data name="owner" type="PublicKey"><Pubkey address={info.parsed.owner} /></Data>
-  <Data name="baseTokensConverted" type="u64">{info.parsed.baseTokensConverted}</Data>
-  <Data name="cumulativeEmissionsCheckpoint" type="u256">{info.parsed.cumulativeEmissionsCheckpoint}</Data>
+  <Data name="globalFarm" type="PublicKey" offset="2"><Pubkey type="aquafarm/globalfarm" address={info.parsed.globalFarm} /></Data>
+  <Data name="owner" type="PublicKey" offset="34"><Pubkey address={info.parsed.owner} /></Data>
+  <Data name="baseTokensConverted" type="u64" offset="42">{info.parsed.baseTokensConverted}</Data>
+  <Data name="cumulativeEmissionsCheckpoint" type="u256" offset="50">{info.parsed.cumulativeEmissionsCheckpoint}</Data>
 </ParsedData>
 
 <DerivedData>

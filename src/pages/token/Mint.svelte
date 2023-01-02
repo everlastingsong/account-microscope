@@ -28,10 +28,10 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="decimals" type="u8">{mintInfo.parsed.decimals}</Data>
-  <Data name="supply" type="u64">{mintInfo.parsed.supply}</Data>
-  <Data name="freezeAuthority" type="PublicKey"><Pubkey address={mintInfo.parsed.freezeAuthority} /></Data>
-  <Data name="mintAuthority" type="PublicKey"><Pubkey address={mintInfo.parsed.mintAuthority} /></Data>
+  <Data name="decimals" type="u8" offset="44">{mintInfo.parsed.decimals}</Data>
+  <Data name="supply" type="u64" offset="36">{mintInfo.parsed.supply}</Data>
+  <Data name="mintAuthority" type="COption<PublicKey>" offset="COption(0)+PublicKey(4)"><Pubkey address={mintInfo.parsed.mintAuthority} /></Data>
+  <Data name="freezeAuthority" type="COption<PublicKey>" offset="COption(46)+PublicKey(50)"><Pubkey address={mintInfo.parsed.freezeAuthority} /></Data>
 </ParsedData>
 
 <DerivedData>

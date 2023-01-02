@@ -28,10 +28,10 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="collectProtocolFeesAuthority" type="PublicKey"><Pubkey address={configInfo.parsed.collectProtocolFeesAuthority} /></Data>
-  <Data name="feeAuthority" type="PublicKey"><Pubkey address={configInfo.parsed.feeAuthority} /></Data>
-  <Data name="rewardEmissionsSuperAuthority" type="PublicKey"><Pubkey address={configInfo.parsed.rewardEmissionsSuperAuthority} /></Data>
-  <Data name="defaultProtocolFeeRate" type="u16">{configInfo.parsed.defaultProtocolFeeRate}</Data>
+  <Data name="feeAuthority" type="PublicKey" offset="8"><Pubkey address={configInfo.parsed.feeAuthority} /></Data>
+  <Data name="collectProtocolFeesAuthority" type="PublicKey" offset="40"><Pubkey address={configInfo.parsed.collectProtocolFeesAuthority} /></Data>
+  <Data name="rewardEmissionsSuperAuthority" type="PublicKey" offset="72"><Pubkey address={configInfo.parsed.rewardEmissionsSuperAuthority} /></Data>
+  <Data name="defaultProtocolFeeRate" type="u16" offset="104">{configInfo.parsed.defaultProtocolFeeRate}</Data>
 </ParsedData>
 
 <DerivedData>

@@ -28,9 +28,9 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="whirlpool" type="PublicKey"><Pubkey type="whirlpool/whirlpool" address={tickArrayInfo.parsed.whirlpool} /></Data>
-  <Data name="startTickIndex" type="i32">{tickArrayInfo.parsed.startTickIndex}</Data>
-  <Data name="ticks">
+  <Data name="whirlpool" type="PublicKey" offset="9956"><Pubkey type="whirlpool/whirlpool" address={tickArrayInfo.parsed.whirlpool} /></Data>
+  <Data name="startTickIndex" type="i32" offset="8">{tickArrayInfo.parsed.startTickIndex}</Data>
+  <Data name="ticks" offset="12">
     <table style="border-spacing: 0;">
       <thead><th>offset</th><th>tick index</th><th>initialized</th><th>liquidity net</th></thead>
       <tbody>

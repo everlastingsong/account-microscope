@@ -28,9 +28,9 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="whirlpoolsConfig" type="PublicKey"><Pubkey type="whirlpool/config" address={feeTierInfo.parsed.whirlpoolsConfig} /></Data>
-  <Data name="tickSpacing" type="u16">{feeTierInfo.parsed.tickSpacing}</Data>
-  <Data name="defaultFeeRate" type="u16">{feeTierInfo.parsed.defaultFeeRate}</Data>
+  <Data name="whirlpoolsConfig" type="PublicKey" offset="8"><Pubkey type="whirlpool/config" address={feeTierInfo.parsed.whirlpoolsConfig} /></Data>
+  <Data name="tickSpacing" type="u16" offset="40">{feeTierInfo.parsed.tickSpacing}</Data>
+  <Data name="defaultFeeRate" type="u16" offset="42">{feeTierInfo.parsed.defaultFeeRate}</Data>
 </ParsedData>
 
 <DerivedData>

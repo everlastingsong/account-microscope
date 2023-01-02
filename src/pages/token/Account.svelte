@@ -28,14 +28,14 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
-  <Data name="owner" type="PublicKey"><Pubkey address={tokenAccountInfo.parsed.owner} /></Data>
-  <Data name="mint" type="PublicKey"><Pubkey type="token/mint" address={tokenAccountInfo.parsed.mint} /></Data>
+  <Data name="owner" type="PublicKey" offset="32"><Pubkey address={tokenAccountInfo.parsed.owner} /></Data>
+  <Data name="mint" type="PublicKey" offset="0"><Pubkey type="token/mint" address={tokenAccountInfo.parsed.mint} /></Data>
+  <Data name="amount" type="u64" offset="64">{tokenAccountInfo.parsed.amount}</Data>
   <Data name="isNative" type="bool">{tokenAccountInfo.parsed.isNative}</Data>
-  <Data name="amount" type="u64">{tokenAccountInfo.parsed.amount}</Data>
-  <Data name="isFrozen">{tokenAccountInfo.parsed.isFrozen}</Data>
-  <Data name="delegate" type="PublicKey"><Pubkey address={tokenAccountInfo.parsed.delegate} /></Data>
-  <Data name="delegatedAmount" type="u64">{tokenAccountInfo.parsed.delegatedAmount}</Data>
-  <Data name="closeAuthority" type="PublicKey"><Pubkey address={tokenAccountInfo.parsed.closeAuthority} /></Data>
+  <Data name="isFrozen" type="bool">{tokenAccountInfo.parsed.isFrozen}</Data>
+  <Data name="delegate" type="COption<PublicKey>" offset="COption(72)+PublicKey(76)"><Pubkey address={tokenAccountInfo.parsed.delegate} /></Data>
+  <Data name="delegatedAmount" type="u64" offset="121">{tokenAccountInfo.parsed.delegatedAmount}</Data>
+  <Data name="closeAuthority" type="COption<PublicKey>" offset="COption(129)+PublicKey(133)"><Pubkey address={tokenAccountInfo.parsed.closeAuthority} /></Data>
 </ParsedData>
 
 <DerivedData>
