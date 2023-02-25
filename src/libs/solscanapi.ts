@@ -16,24 +16,28 @@ export type TokenHolderEntry = {
 }
 
 export async function getTokenHolders(mint: PublicKey): Promise<TokenHolderEntry[]> {
-  const api = TOKEN_HOLDERS + mint.toBase58();
-  const response = await (await fetch(api)).json();
+  try {
+    const api = TOKEN_HOLDERS + mint.toBase58();
+    const response = await (await fetch(api)).json();
 
-  const list: TokenHolderEntry[] = [];
-  response.data.forEach((data) => {
-    const amount = new u64(data.amount);
-    const decimals = Number.parseInt(data.decimals);
-    const decimalAmount = DecimalUtil.fromU64(amount, decimals);
-  
-    list.push({
-      rank: Number.parseInt(data.rank),
-      address: new PublicKey(data.address),
-      amount,
-      decimalAmount,
-      decimals,
-      owner: new PublicKey(data.owner),
+    const list: TokenHolderEntry[] = [];
+    response.data.forEach((data) => {
+      const amount = new u64(data.amount);
+      const decimals = Number.parseInt(data.decimals);
+      const decimalAmount = DecimalUtil.fromU64(amount, decimals);
+    
+      list.push({
+        rank: Number.parseInt(data.rank),
+        address: new PublicKey(data.address),
+        amount,
+        decimalAmount,
+        decimals,
+        owner: new PublicKey(data.owner),
+      });
     });
-  });
 
-  return list;
+    return list;
+  } catch (e) {
+    return [];
+  }
 }

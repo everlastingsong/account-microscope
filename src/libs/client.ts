@@ -20,6 +20,7 @@ export type RPC = {
 }
 
 const _rpclist: RPC[] = [
+  { id: "everstake", name: "Mainnet Everstake", network: "mainnet", url: "https://solana-mainnet.rpc.extrnode.com" },
   { id: "anker", name: "Mainnet Anker", network: "mainnet", url: "https://rpc.ankr.com/solana" },
   { id: "solana", name: "Mainnet Solana", network: "mainnet", url: "https://api.mainnet-beta.solana.com" },
   // { id: "serum", name: "Mainnet Serum", network: "mainnet", url: "https://solana-api.projectserum.com" },

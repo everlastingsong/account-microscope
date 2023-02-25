@@ -32,7 +32,10 @@
   </div>
 
   <h1 style="margin: 0em;">🔬Account microscope</h1>
-  <div></div>
+  <div style="font-size: small; margin-bottom: 10px;">
+  Account microscope is open source. 
+  If you are interested in how they are derived, <a href="https://github.com/everlastingsong/account-microscope/tree/main/src/libs" target="_blank">please check the code</a> 👍
+  </div>
   <form on:submit|preventDefault={onSubmit}>
   	<input style="margin: 0.5em 0em;" bind:value={pubkey} type="text" size="64" placeholder="HJPjoWUrhoZzkNfRpHuieeFk9WcZWjwy6PBjZ81ngndJ" />
     <input type="submit" value="Check!" />
