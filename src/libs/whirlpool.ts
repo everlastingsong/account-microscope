@@ -510,6 +510,8 @@ type TradableAmounts = {
 
 type TickArrayTradableAmount = {
   tickArrayPubkey: PublicKey,
+  tickArrayStartIndex: number,
+  tickArrayStartPrice: Decimal,
   tickArrayData: TickArrayData,
   amountA: Decimal,
   amountB: Decimal,
@@ -622,12 +624,14 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   const currentTickArrayIndex = (currentTickArrayStartIndex - tickArrayStartIndexes[0]) / ticksInArray;
 
   // upward
-  let upwardTickArrayPubkeys: PublicKey[] = [];
-  let upwardTickArrays: TickArrayData[] = [];
-  let upwardAmountA: Decimal[] = [];
-  let upwardAmountB: Decimal[] = [];
+  const upwardTickArrayPubkeys: PublicKey[] = [];
+  const upwardTickArrayStartIndexes: number[] = [];
+  const upwardTickArrays: TickArrayData[] = [];
+  const upwardAmountA: Decimal[] = [];
+  const upwardAmountB: Decimal[] = [];
   for (let i=0; /*i<=3 && */currentTickArrayIndex+i < tickArrayPubkeys.length; i++) {
     upwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex+i]);
+    upwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex+i]);
     upwardTickArrays.push(tickArrays[currentTickArrayIndex+i]);
     upwardAmountA.push(new Decimal(0));
     upwardAmountB.push(new Decimal(0));
@@ -660,12 +664,14 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   }
 
   // downward
-  let downwardTickArrayPubkeys: PublicKey[] = [];
-  let downwardTickArrays: TickArrayData[] = [];
-  let downwardAmountA: Decimal[] = [];
-  let downwardAmountB: Decimal[] = [];
+  const downwardTickArrayPubkeys: PublicKey[] = [];
+  const downwardTickArrayStartIndexes: number[] = [];
+  const downwardTickArrays: TickArrayData[] = [];
+  const downwardAmountA: Decimal[] = [];
+  const downwardAmountB: Decimal[] = [];
   for (let i=0; /*i<=3 && */currentTickArrayIndex-i >= 0; i++) {
     downwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex-i]);
+    downwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex-i]);
     downwardTickArrays.push(tickArrays[currentTickArrayIndex-i]);
     downwardAmountA.push(new Decimal(0));
     downwardAmountB.push(new Decimal(0));
@@ -701,6 +707,8 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   for (let i=0; i<upwardTickArrayPubkeys.length; i++) {
     upwardTickArrayTradableAmount.push({
       tickArrayPubkey: upwardTickArrayPubkeys[i],
+      tickArrayStartIndex: upwardTickArrayStartIndexes[i],
+      tickArrayStartPrice: toFixedDecimal(PriceMath.tickIndexToPrice(upwardTickArrayStartIndexes[i], decimalsA, decimalsB), decimalsB),
       tickArrayData: upwardTickArrays[i],
       amountA: upwardAmountA[i],
       amountB: upwardAmountB[i],
@@ -711,6 +719,8 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   for (let i=0; i<downwardTickArrayPubkeys.length; i++) {
     downwardTickArrayTradableAmount.push({
       tickArrayPubkey: downwardTickArrayPubkeys[i],
+      tickArrayStartIndex: downwardTickArrayStartIndexes[i],
+      tickArrayStartPrice: toFixedDecimal(PriceMath.tickIndexToPrice(downwardTickArrayStartIndexes[i], decimalsA, decimalsB), decimalsB),
       tickArrayData: downwardTickArrays[i],
       amountA: downwardAmountA[i],
       amountB: downwardAmountB[i],

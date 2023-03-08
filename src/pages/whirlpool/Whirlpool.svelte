@@ -144,13 +144,13 @@
     error detected 😵
     {:else}
     <table style="border-spacing: 0;">
-      <thead><th>pubkey</th><th>initialized</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th></thead>
+      <thead><th>pubkey</th><th>start price</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th></thead>
       <tbody>
       <tr><td colspan="4">B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} to A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} direction (price up)</td></tr>
       {#each whirlpoolInfo.derived.tickArrayTradableAmounts.upward.reverse() as tradableAmount}
       <tr class="{!!tradableAmount.tickArrayData ? "initialized" : "uninitialized"}">
         <td><Pubkey type="whirlpool/tickarray" address={tradableAmount.tickArrayPubkey} short/></td>
-        <td>{!!tradableAmount.tickArrayData}</td>
+        <td>{tradableAmount.tickArrayStartPrice}</td>
         <td class="{!!tradableAmount.tickArrayData ? "amount buy" : "amount uninitbuy"}">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
         <td class="amount">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
       </tr>
@@ -159,7 +159,7 @@
       {#each whirlpoolInfo.derived.tickArrayTradableAmounts.downward as tradableAmount}
       <tr class="{!!tradableAmount.tickArrayData ? "initialized" : "uninitialized"}">
         <td><Pubkey type="whirlpool/tickarray" address={tradableAmount.tickArrayPubkey} short/></td>
-        <td>{!!tradableAmount.tickArrayData}</td>
+        <td>{tradableAmount.tickArrayStartPrice}</td>
         <td class="amount">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
         <td class="{!!tradableAmount.tickArrayData ? "amount sell" : "amount uninitsell"}">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
       </tr>
