@@ -1,5 +1,5 @@
 import { AccountFetcher, ORCA_WHIRLPOOL_PROGRAM_ID, ParsableMintInfo, ParsableTokenInfo, PDAUtil } from "@orca-so/whirlpools-sdk";
-import { Address } from "@project-serum/anchor";
+import { Address, utils } from "@project-serum/anchor";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { PublicKey, TokenAccountBalancePair } from "@solana/web3.js";
 import { u64 } from "@solana/spl-token";
@@ -17,6 +17,7 @@ export const ACCOUNT_DEFINITION = {
 type TokenAccountDerivedInfo = {
   decimals: number,
   amount: Decimal,
+  isATA: boolean,
 }
 
 type TokenAccountInfo = {
@@ -48,12 +49,17 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
   // get mint
   const mint = await fetcher.getMintInfo(splTokenAccountInfo.mint, true);
 
+  // isATA ?
+  const ataAddress = await utils.token.associatedAddress({ mint: splTokenAccountInfo.mint, owner: splTokenAccountInfo.owner });
+  const isATA = ataAddress.equals(pubkey);
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: splTokenAccountInfo,
     derived: {
       decimals: mint.decimals,
       amount: DecimalUtil.fromU64(splTokenAccountInfo.amount, mint.decimals),
+      isATA,
     }
   };
 }

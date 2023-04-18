@@ -41,6 +41,7 @@
     <input type="submit" value="Check!" />
     <a href="#/whirlpool/list" style="font-size:smaller; text-decoration:none;">whirlpool/list</a>
     <a href="#/tokenswap/list" style="font-size:smaller; text-decoration:none;">tokenswap/list</a>
+    <a href="#/token/deriveAta" style="font-size:smaller; text-decoration:none;">token/deriveAta</a>
   </form>
   <hr />
   <Router {routes} />

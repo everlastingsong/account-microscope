@@ -6,9 +6,11 @@ import WhirlpoolsConfig from "../pages/whirlpool/WhirlpoolsConfig.svelte";
 import FeeTier from "../pages/whirlpool/FeeTier.svelte";
 import TickArray from "../pages/whirlpool/TickArray.svelte";
 import WhirlpoolList from "../pages/whirlpool/List.svelte";
+//import FindPositions from "../pages/whirlpool/FindPositions.svelte";
 
 import TokenAccount from "../pages/token/Account.svelte";
 import TokenMint from "../pages/token/Mint.svelte";
+import AssociatedTokenAccount from "../pages/token/AssociatedTokenAccount.svelte";
 
 import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
 import TokenSwapList from "../pages/tokenswap/List.svelte";
@@ -22,6 +24,7 @@ export const routes = {
   '/': Home,
 
   '/whirlpool/list': WhirlpoolList,
+//  '/whirlpool/findPositionsByRange': FindPositions,
   '/whirlpool/config/:pubkey': WhirlpoolsConfig,
   '/whirlpool/feetier/:pubkey': FeeTier,
   '/whirlpool/whirlpool/:pubkey': Whirlpool,
@@ -30,6 +33,7 @@ export const routes = {
 
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
+  '/token/deriveAta': AssociatedTokenAccount,
 
   '/tokenswap/list': TokenSwapList,
   '/tokenswap/swapstate/:pubkey': TokenSwap,

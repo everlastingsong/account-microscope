@@ -41,6 +41,7 @@
 <DerivedData>
   <Data name="decimals">{tokenAccountInfo.derived.decimals}</Data>
   <Data name="amount">{tokenAccountInfo.derived.amount}</Data>
+  <Data name="isATA">{tokenAccountInfo.derived.isATA}</Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}
