@@ -35,6 +35,30 @@
     return url;
   }
 
+  function getSolanaFmURL(address: Address): string {
+    if ( !address ) return "";
+
+    const solscanBaseUrl = "https://solana.fm/address";
+    const rpc = getRPC();
+
+    let querystring = "";
+    if (rpc.network === "devnet") {
+      querystring = "?cluster=devnet-solana";
+    }
+    if (rpc.network === "localnet") {
+      // Solana FM doesn't accept custom RPC URL
+      // pass (don't include localnet RPC URL, treat it as mainnet)
+    }
+    if (rpc.network === "custom") {
+      // pass (don't include custom RPC URL, treat it as mainnet)
+    }
+
+    const url = `${solscanBaseUrl}/${address.toString()}${querystring}`;
+    return url;
+  }
+
+
+
   let tokenInfo: TokenInfo|undefined = undefined;
   getTokenList().then((list) => {tokenInfo = list.getTokenInfoByMint(address)});
 
@@ -65,6 +89,7 @@
 <span bind:this={toolkit} style="visibility: hidden;">
   {#if address}
   <a target="_blank" rel="noreferrer" href={getSolscanURL(address)}>🔍</a>
+  <a target="_blank" rel="noreferrer" href={getSolanaFmURL(address)}>📻</a>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <span bind:this={clipboard} on:click={copy}>📎</span>
   {/if}
