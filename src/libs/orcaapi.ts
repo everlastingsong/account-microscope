@@ -114,7 +114,7 @@ export async function getTokenList(): Promise<TokenList> {
     });
   });
 
-  list.sort((a, b) => a.name.localeCompare(b.name));
+  list.sort((a, b) => a.symbol.localeCompare(b.symbol));
 
   _cachedTokenList = new TokenList(list);
   return _cachedTokenList;
