@@ -255,13 +255,15 @@ type PositionDerivedInfo = {
   status: string,
   sharePercentOfLiquidity: Decimal,
   tickCurrentIndex: number,
+  currentSqrtPrice: BN,
   currentPrice: Decimal,
   poolLiquidity: BN,
+  poolTickSpacing: number;
   lowerTickArray: PublicKey,
   upperTickArray: PublicKey,
 }
 
-type PositionInfo = {
+export type PositionInfo = {
   meta: AccountMetaInfo,
   parsed: PositionData,
   derived: PositionDerivedInfo,
@@ -368,8 +370,10 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       status: status === PositionStatus.InRange ? "Price is In Range" : (status === PositionStatus.AboveRange ? "Price is Above Range" : "Price is Below Range"),
       sharePercentOfLiquidity,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
+      currentSqrtPrice: whirlpoolData.sqrtPrice,
       currentPrice: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB), decimalsB),
       poolLiquidity: whirlpoolData.liquidity,
+      poolTickSpacing: whirlpoolData.tickSpacing,
       lowerTickArray: tickArrayPubkeys[0],
       upperTickArray: tickArrayPubkeys[1],
     }

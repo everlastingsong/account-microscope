@@ -57,8 +57,6 @@
     return url;
   }
 
-
-
   let tokenInfo: TokenInfo|undefined = undefined;
   getTokenList().then((list) => {tokenInfo = list.getTokenInfoByMint(address)});
 

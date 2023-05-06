@@ -13,6 +13,8 @@
   $: positionInfoPromise = getPositionInfo(params.pubkey);
 
   import { TokenInfo } from "../../libs/orcaapi";
+  import PositionSimulator from "../../components/PositionSimulator.svelte";
+  import Laboratory from "../../components/Laboratory.svelte";
   function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
     if (tokenInfo === undefined) return "";
     return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
@@ -89,6 +91,11 @@
   <Data name="lower tick array"><Pubkey type="whirlpool/tickarray" address={positionInfo.derived.lowerTickArray} /></Data>
   <Data name="upper tick array"><Pubkey type="whirlpool/tickarray" address={positionInfo.derived.upperTickArray} /></Data>
 </DerivedData>
+<Laboratory>
+  <Data name="simulation">
+    <PositionSimulator positionInfo={positionInfo} />
+  </Data>
+</Laboratory>
 </ParsedAndDerivedData>
 {/await}
 
