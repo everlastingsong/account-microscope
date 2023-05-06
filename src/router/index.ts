@@ -34,7 +34,7 @@ export const routes = {
 
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
-  '/token/list': TokenAccountList,
+  '/token/listTokenAccounts/:pubkey?': TokenAccountList,
   '/token/deriveAta': AssociatedTokenAccount,
 
   '/tokenswap/list': TokenSwapList,

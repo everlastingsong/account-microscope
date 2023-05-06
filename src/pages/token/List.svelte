@@ -3,14 +3,28 @@
   import { TokenAccountList, listTokenAccounts } from "../../libs/token";
   import Pubkey from "../../components/Pubkey.svelte";
 
-  let wallet;
+  export let params;
+
+  let wallet = params.pubkey ?? "";
   let hideZeroAccounts = true;
 
-  $: tokenAccountListPromise = new Promise<TokenAccountList>((resolve) => resolve([]));
+  let tokenAccountListPromise = isValidAddress()
+    ? listTokenAccounts(translateAddress(wallet))
+    : new Promise<TokenAccountList>((resolve) => resolve([]));
 
   async function onSubmit() {
+    if (!isValidAddress()) return;
     const walletAddress = translateAddress(wallet);
     tokenAccountListPromise = listTokenAccounts(walletAddress);
+  }
+
+  function isValidAddress() {
+    try {
+      translateAddress(wallet);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 </script>
 
