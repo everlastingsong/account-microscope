@@ -10,6 +10,7 @@ import WhirlpoolList from "../pages/whirlpool/List.svelte";
 
 import TokenAccount from "../pages/token/Account.svelte";
 import TokenMint from "../pages/token/Mint.svelte";
+import TokenAccountList from "../pages/token/List.svelte";
 import AssociatedTokenAccount from "../pages/token/AssociatedTokenAccount.svelte";
 
 import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
@@ -33,6 +34,7 @@ export const routes = {
 
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
+  '/token/list': TokenAccountList,
   '/token/deriveAta': AssociatedTokenAccount,
 
   '/tokenswap/list': TokenSwapList,

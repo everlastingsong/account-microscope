@@ -89,11 +89,6 @@
 {/await}
 
 <style>
-  a {
-    color: #39f;
-    text-decoration: none;
-  }
-
   div.ata {
     margin-top: 1em;
   }
