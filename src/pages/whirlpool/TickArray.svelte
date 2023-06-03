@@ -19,12 +19,7 @@
   loading...
   {params.pubkey}
 {:then tickArrayInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/tickarray" address={tickArrayInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={tickArrayInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{tickArrayInfo.meta.lamports}</Data>
-  <Data name="data size">{tickArrayInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="whirlpool/tickarray" meta={tickArrayInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

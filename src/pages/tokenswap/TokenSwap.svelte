@@ -30,12 +30,7 @@
   loading...
   {params.pubkey}
 {:then info}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="tokenswap/swapstate" address={info.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={info.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{info.meta.lamports}</Data>
-  <Data name="data size">{info.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="tokenswap/swapstate" meta={info.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

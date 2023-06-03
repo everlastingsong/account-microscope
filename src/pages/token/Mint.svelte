@@ -19,12 +19,7 @@
   loading...
   {params.pubkey}
 {:then mintInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="token/mint" address={mintInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={mintInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{mintInfo.meta.lamports}</Data>
-  <Data name="data size">{mintInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="token/mint" meta={mintInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

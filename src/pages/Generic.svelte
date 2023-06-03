@@ -18,12 +18,7 @@
   loading...
   {params.pubkey}
 {:then genericAccountInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey address={genericAccountInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={genericAccountInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{genericAccountInfo.meta.lamports}</Data>
-  <Data name="data size">{genericAccountInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="generic" meta={genericAccountInfo.meta} />
 {/await}
 
 <style>

@@ -19,12 +19,7 @@
   loading...
   {params.pubkey}
 {:then tokenAccountInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="token/account" address={tokenAccountInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={tokenAccountInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{tokenAccountInfo.meta.lamports}</Data>
-  <Data name="data size">{tokenAccountInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="token/account" meta={tokenAccountInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

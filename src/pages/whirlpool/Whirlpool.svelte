@@ -30,12 +30,7 @@
   loading...
   {params.pubkey}
 {:then whirlpoolInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/whirlpool" address={whirlpoolInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={whirlpoolInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{whirlpoolInfo.meta.lamports}</Data>
-  <Data name="data size">{whirlpoolInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="whirlpool/whirlpool" meta={whirlpoolInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

@@ -19,12 +19,7 @@
   loading...
   {params.pubkey}
 {:then positionBundleInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/tickarray" address={positionBundleInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={positionBundleInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{positionBundleInfo.meta.lamports}</Data>
-  <Data name="data size">{positionBundleInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="whirlpool/tickarray" meta={positionBundleInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>

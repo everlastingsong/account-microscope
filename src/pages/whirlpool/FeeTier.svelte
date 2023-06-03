@@ -19,12 +19,7 @@
   loading...
   {params.pubkey}
 {:then feeTierInfo}
-<MetaData>
-  <Data name="pubkey" type="PublicKey"><Pubkey type="whirlpool/feetier" address={feeTierInfo.meta.pubkey} /></Data>
-  <Data name="owner program" type="PublicKey"><Pubkey address={feeTierInfo.meta.owner} /></Data>
-  <Data name="lamports" type="u64">{feeTierInfo.meta.lamports}</Data>
-  <Data name="data size">{feeTierInfo.meta.data.length}</Data>
-</MetaData>
+<MetaData accountType="whirlpool/feetier" meta={feeTierInfo.meta} />
 
 <ParsedAndDerivedData>
 <ParsedData>
