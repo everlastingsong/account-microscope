@@ -5,6 +5,7 @@ import Position from "../pages/whirlpool/Position.svelte";
 import WhirlpoolsConfig from "../pages/whirlpool/WhirlpoolsConfig.svelte";
 import FeeTier from "../pages/whirlpool/FeeTier.svelte";
 import TickArray from "../pages/whirlpool/TickArray.svelte";
+import PositionBundle from "../pages/whirlpool/PositionBundle.svelte";
 import WhirlpoolList from "../pages/whirlpool/List.svelte";
 //import FindPositions from "../pages/whirlpool/FindPositions.svelte";
 
@@ -31,6 +32,7 @@ export const routes = {
   '/whirlpool/whirlpool/:pubkey': Whirlpool,
   '/whirlpool/tickarray/:pubkey': TickArray,
   '/whirlpool/position/:pubkey': Position,
+  '/whirlpool/positionbundle/:pubkey': PositionBundle,
 
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,

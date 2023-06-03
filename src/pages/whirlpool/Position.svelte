@@ -65,6 +65,12 @@
 </ParsedData>
 
 <DerivedData>
+  <Data name="is bundled position">{positionInfo.derived.isBundledPosition}</Data>
+  {#if positionInfo.derived.isBundledPosition}
+    <Data name="position bundle">
+      <Pubkey type="whirlpool/positionbundle" address={positionInfo.derived.positionBundle} />
+    </Data>
+  {/if}
   <Data name="lower price">{positionInfo.derived.priceLower} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>
   <Data name="upper price">{positionInfo.derived.priceUpper} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>
   <Data name="inverted lower price">{positionInfo.derived.invertedPriceLower} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoB, positionInfo.derived.tokenInfoA)}</Data>

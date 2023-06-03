@@ -25,6 +25,7 @@ export async function resolveAccountType(addr: Address): Promise<ResolvedAccount
       case 9988: return { pubkey, path: "/whirlpool/tickarray" };
       case 653: return { pubkey, path: "/whirlpool/whirlpool" };
       case 216: return { pubkey, path: "/whirlpool/position" };
+      case 136: return { pubkey, path: "/whirlpool/positionbundle" };
       case 108: return { pubkey, path: "/whirlpool/config" };
       case 44: return { pubkey, path: "/whirlpool/feetier" };
     }

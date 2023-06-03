@@ -1,5 +1,5 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData } from "@orca-so/whirlpools-sdk";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
@@ -20,6 +20,7 @@ export const ACCOUNT_DEFINITION = {
   WhirlpoolsConfig: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/config.rs#L6",
   FeeTier: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/fee_tier.rs#L12",
   TickArray: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/tick.rs#L143",
+  PositionBundle: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position_bundle.rs#L9",
 }
 
 type NeighboringTickArray = {
@@ -261,6 +262,8 @@ type PositionDerivedInfo = {
   poolTickSpacing: number;
   lowerTickArray: PublicKey,
   upperTickArray: PublicKey,
+  isBundledPosition: boolean,
+  positionBundle?: PublicKey,
 }
 
 export type PositionInfo = {
@@ -344,6 +347,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const tokenInfoR1 = tokenList.getTokenInfoByMint(mintPubkeys[3]);
   const tokenInfoR2 = tokenList.getTokenInfoByMint(mintPubkeys[4]);
 
+  // check if bundled position
+  const derivedPositionAddress = PDAUtil.getPosition(accountInfo.owner, positionData.positionMint).publicKey;
+  const derivedPositionBundleAddress = PDAUtil.getPositionBundle(accountInfo.owner, positionData.positionMint).publicKey;
+  const isBundledPosition = !derivedPositionAddress.equals(pubkey);
+
   return {
     meta: toMeta(pubkey, accountInfo),
     parsed: positionData,
@@ -376,6 +384,8 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       poolTickSpacing: whirlpoolData.tickSpacing,
       lowerTickArray: tickArrayPubkeys[0],
       upperTickArray: tickArrayPubkeys[1],
+      isBundledPosition,
+      positionBundle: isBundledPosition ? derivedPositionBundleAddress : undefined,
     }
   };
 }
@@ -736,4 +746,70 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
     downward: downwardTickArrayTradableAmount,
     error: false,
   }
+}
+
+type BundledPositionInfo = {
+  bundleIndex: number,
+  address: PublicKey,
+  whirlpool: PublicKey,
+  tickLowerIndex: number,
+  tickUpperIndex: number,
+  liquidity: BN,
+}
+
+type PositionBundleDerivedInfo = {
+  occupied: number;
+  unoccupied: number;
+  bundledPositions: BundledPositionInfo[],
+}
+
+type PositionBundleInfo = {
+  meta: AccountMetaInfo,
+  parsed: PositionBundleData,
+  derived: PositionBundleDerivedInfo,
+}
+
+export async function getPositionBundleInfo(addr: Address): Promise<PositionBundleInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+  const fetcher = new AccountFetcher(connection);
+
+  const accountInfo = await connection.getAccountInfo(pubkey);
+  const positionBundleData = ParsablePositionBundle.parse(accountInfo.data);
+
+  const occupiedIndexes = PositionBundleUtil.getOccupiedBundleIndexes(positionBundleData);
+  const bundledPositionAddresses = occupiedIndexes.map((index) => {
+    return PDAUtil.getBundledPosition(accountInfo.owner, positionBundleData.positionBundleMint, index).publicKey
+  });
+
+  const bundledPositionDatas = await fetcher.listPositions(bundledPositionAddresses, true);
+
+  const bundledPositions: BundledPositionInfo[] = [];
+  for (let i=0; i<bundledPositionDatas.length; i++) {
+    if (!bundledPositionDatas[i]) continue;
+
+    const bundledPositionData = bundledPositionDatas[i];
+    const bundledPositionInfo = {
+      bundleIndex: occupiedIndexes[i],
+      address: bundledPositionAddresses[i],
+      whirlpool: bundledPositionData.whirlpool,
+      tickLowerIndex: bundledPositionData.tickLowerIndex,
+      tickUpperIndex: bundledPositionData.tickUpperIndex,
+      liquidity: bundledPositionData.liquidity,
+    };
+    bundledPositions.push(bundledPositionInfo);
+  }
+
+  const occupied = bundledPositions.length;
+  const unoccupied = POSITION_BUNDLE_SIZE - occupied;
+
+  return {
+    meta: toMeta(pubkey, accountInfo),
+    parsed: positionBundleData,
+    derived: {
+      occupied,
+      unoccupied,
+      bundledPositions,
+    },
+  };
 }
