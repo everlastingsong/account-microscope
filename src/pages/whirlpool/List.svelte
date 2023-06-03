@@ -12,7 +12,11 @@
 
   async function getFilteredWhirlpoolList(filter: string): Promise<WhirlpoolListEntry[]> {
     const list = await getWhirlpoolList();
-    return list.filter((p) => filter.length == 0 || p.name.toUpperCase().indexOf(filter.toUpperCase()) != -1);
+    return list.filter(
+      (p) => filter.length == 0 ||
+      p.name.toUpperCase().indexOf(filter.toUpperCase()) >= 0 ||
+      p.invertedName.toUpperCase().indexOf(filter.toUpperCase()) >= 0
+    );
   }
 </script>
 

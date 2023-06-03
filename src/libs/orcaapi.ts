@@ -9,6 +9,7 @@ const V1_WHIRLPOOL_LIST = "https://api.mainnet.orca.so/v1/whirlpool/list";
 export type WhirlpoolListEntry = {
   address: PublicKey,
   name: string,
+  invertedName: string,
   symbolA: string,
   symbolB: string,
   mintA: PublicKey,
@@ -44,6 +45,7 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
     list.push({
       address: new PublicKey(p.address),
       name: `${p.tokenA.symbol}/${p.tokenB.symbol}(${p.tickSpacing})`,
+      invertedName: `${p.tokenB.symbol}/${p.tokenA.symbol}(${p.tickSpacing})`,
       symbolA: p.tokenA.symbol,
       symbolB: p.tokenB.symbol,
       mintA: new PublicKey(p.tokenA.mint),
