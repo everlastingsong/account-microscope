@@ -3,7 +3,7 @@ import { AccountFetcher } from "@orca-so/whirlpools-sdk";
 import { Aquafarm, GlobalFarm, UserFarm } from "@orca-so/aquafarm";
 import { getAuthorityAndNonce } from "@orca-so/aquafarm/dist/models/GlobalFarm";
 import { decodeGlobalFarmBuffer, decodeUserFarmBuffer } from "@orca-so/aquafarm/dist/utils/layout";
-import { Address, BN } from "@project-serum/anchor";
+import { Address } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";

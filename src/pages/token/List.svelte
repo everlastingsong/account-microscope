@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { translateAddress } from "@project-serum/anchor";
+  import { translateAddress } from "@coral-xyz/anchor";
   import { TokenAccountList, listTokenAccounts } from "../../libs/token";
   import Pubkey from "../../components/Pubkey.svelte";
 

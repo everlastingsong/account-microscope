@@ -30,7 +30,7 @@
   "dependencies": {
     "@orca-so/aquafarm": "^0.0.12",
     "@orca-so/stablecurve": "^1.0.6",
-    "@orca-so/whirlpools-sdk": "^0.5.3",
+    "@orca-so/whirlpools-sdk": "^0.10.0",
     "@rollup/plugin-json": "^5.0.1",
     "assert": "^2.0.0",
     "moment": "^2.29.4",

@@ -1,5 +1,5 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { Address, BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { DecimalUtil } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import Decimal from "decimal.js";

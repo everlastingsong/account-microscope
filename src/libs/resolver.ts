@@ -1,6 +1,6 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Address } from "@project-serum/anchor";
+import { Address } from "@coral-xyz/anchor";
 import { ORCA_WHIRLPOOL_PROGRAM_ID } from "@orca-so/whirlpools-sdk";
 import { AddressUtil } from "@orca-so/common-sdk";
 import { getConnection } from "./client";

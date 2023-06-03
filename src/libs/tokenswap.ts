@@ -1,6 +1,6 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { AccountFetcher } from "@orca-so/whirlpools-sdk";
-import { Address, BN } from "@project-serum/anchor";
+import { Address, BN } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { computeOutputAmount } from "@orca-so/stablecurve";
 import { u64 } from "@solana/spl-token";

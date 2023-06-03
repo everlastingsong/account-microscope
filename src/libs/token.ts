@@ -1,5 +1,5 @@
 import { AccountFetcher, ORCA_WHIRLPOOL_PROGRAM_ID, ParsableMintInfo, ParsableTokenInfo, PDAUtil } from "@orca-so/whirlpools-sdk";
-import { Address, utils } from "@project-serum/anchor";
+import { Address, utils } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { PublicKey, ParsedAccountData } from "@solana/web3.js";
 import { u64, TOKEN_PROGRAM_ID } from "@solana/spl-token";

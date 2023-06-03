@@ -2,7 +2,7 @@ import { PublicKey, AccountInfo } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import fetch from "node-fetch";
 import moment from "moment";
-import { Address, BN } from "@project-serum/anchor";
+import { Address, BN } from "@coral-xyz/anchor";
 
 const V1_WHIRLPOOL_LIST = "https://api.mainnet.orca.so/v1/whirlpool/list";
 

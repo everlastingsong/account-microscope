@@ -1,4 +1,4 @@
-import { Address } from "@project-serum/anchor";
+import { Address } from "@coral-xyz/anchor";
 import { AddressUtil } from "@orca-so/common-sdk";
 import { AccountMetaInfo, toMeta } from "./account";
 import { getConnection } from "./client";
