@@ -100,7 +100,7 @@ export type TokenAccountListEntry = {
   extension: {
     whirlpool?: {
       position?: PublicKey,
-      positionBundle?: PublicKey, // future
+      positionBundle?: PublicKey,
     },
   }
 };
@@ -158,36 +158,55 @@ async function dispatchWhirlpoolExtension(tokenAccountList: TokenAccountList) {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const candidates: { index: number; address: PublicKey }[] = [];
+  const candidates: { index: number; position: PublicKey; bundle: PublicKey }[] = [];
   tokenAccountList.forEach((ta, i) => {
     if (ta.decimals > 0) return;
     if (!ta.amount.eqn(1)) return;
 
     candidates.push({
       index: i,
-      address: PDAUtil.getPosition(
+      position: PDAUtil.getPosition(
         ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */,
         ta.mint
-      ).publicKey
+      ).publicKey,
+      bundle: PDAUtil.getPositionBundle(
+        ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */,
+        ta.mint
+      ).publicKey,
     });
   });
 
   if (candidates.length === 0) return;
 
   const whirlpoolPositions = await fetcher.listPositions(
-    candidates.map((c) => c.address),
+    candidates.map((c) => c.position),
+    true
+  );
+
+  const whirlpoolPositionBundles = await fetcher.listPositionBundles(
+    candidates.map((c) => c.bundle),
     true
   );
 
   candidates.forEach((c, i) => {
-    if (whirlpoolPositions[i] === null) return;
+    if (whirlpoolPositions[i] !== null) {
+      const current = tokenAccountList[c.index].extension;
+      tokenAccountList[c.index].extension = {
+        ...current,
+        whirlpool: {
+          position: c.position,
+        }
+      };
+    }
 
-    const current = tokenAccountList[c.index].extension;
-    tokenAccountList[c.index].extension = {
-      ...current,
-      whirlpool: {
-        position: c.address,
-      }
-    };
+    if (whirlpoolPositionBundles[i] !== null) {
+      const current = tokenAccountList[c.index].extension;
+      tokenAccountList[c.index].extension = {
+        ...current,
+        whirlpool: {
+          positionBundle: c.bundle,
+        }
+      };
+    }
   });
 }

@@ -70,6 +70,7 @@
     <th>mint</th>
     <th>amount</th>
     <th>whirlpool position</th>
+    <th>whirlpool position bundle</th>
   </thead>
   <tbody>
   {#each tokenAccountList.filter((a) => a.decimals === 0 && (!hideZeroAccounts || !a.amount.isZero())) as account}
@@ -81,6 +82,11 @@
     <td>
       {#if account.extension.whirlpool?.position}
       <Pubkey short type="whirlpool/position" address={account.extension.whirlpool.position} />
+      {/if}
+    </td>
+    <td>
+      {#if account.extension.whirlpool?.positionBundle}
+      <Pubkey short type="whirlpool/positionbundle" address={account.extension.whirlpool.positionBundle} />
       {/if}
     </td>
   </tr>
