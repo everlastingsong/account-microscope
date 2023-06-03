@@ -47,6 +47,25 @@
       </tbody>
     </table>  
   </Data>
+  <Data name="initialized ticks">
+    {#each tickArrayInfo.parsed.ticks as tick, offset}
+    {#if tick.initialized}
+    <Data name={`ticks[${offset}] (${tickArrayInfo.parsed.startTickIndex + offset*tickArrayInfo.derived.tickSpacing})`}>
+    <table style="border-spacing: 0;">
+      <tbody>
+      <tr><td>liquidity_net</td><td>{tick.liquidityNet}</td></tr>
+      <tr><td>liquidity_gross</td><td>{tick.liquidityGross}</td></tr>
+      <tr><td>fee_growth_outside_a</td><td>{tick.feeGrowthOutsideA}</td></tr>
+      <tr><td>fee_growth_outside_b</td><td>{tick.feeGrowthOutsideB}</td></tr>
+      <tr><td>reward_growths_outside[0]</td><td>{tick.rewardGrowthsOutside[0]}</td></tr>
+      <tr><td>reward_growths_outside[1]</td><td>{tick.rewardGrowthsOutside[1]}</td></tr>
+      <tr><td>reward_growths_outside[2]</td><td>{tick.rewardGrowthsOutside[2]}</td></tr>
+      </tbody>
+    </table>
+    </Data>
+    {/if}
+    {/each}
+  </Data>
 </ParsedData>
 
 <DerivedData>
