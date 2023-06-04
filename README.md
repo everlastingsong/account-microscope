@@ -28,3 +28,8 @@ https://everlastingsong.github.io/account-microscope/#/whirlpool/list
 - TokenSwap
 - GlobalFarm
 - UserFarm
+
+## HexDump
+For not supported accounts, HexDump will be displayed and you can analyze the data.
+
+<img width="1057" alt="screenshot 2023-06-05 0 28 59" src="https://github.com/everlastingsong/account-microscope/assets/109891005/1742c933-2b82-4edb-a60b-7321506540cb">
