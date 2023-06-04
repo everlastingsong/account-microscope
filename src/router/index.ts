@@ -21,7 +21,6 @@ import GlobalFarm from "../pages/aquafarm/GlobalFarm.svelte";
 import UserFarm from "../pages/aquafarm/UserFarm.svelte";
 
 import Generic from "../pages/Generic.svelte";
-import HexDump from "../pages/HexDump.svelte";
 
 export const routes = {
   '/': Home,
@@ -47,5 +46,4 @@ export const routes = {
   '/aquafarm/userfarm/:pubkey': UserFarm,
 
   '/generic/:pubkey': Generic,
-  '/hexdump/:pubkey': HexDump,
 }

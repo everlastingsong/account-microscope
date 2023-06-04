@@ -31,6 +31,7 @@
 
 <DerivedData>
   <Data name="supply">{mintInfo.derived.supply}</Data>
+  <!--
   <Data name="largest holders (Solscan)">
     <table style="border-spacing: 0;">
       <thead><th>owner</th><th>address</th><th>amount<th></thead>
@@ -45,6 +46,7 @@
       </tbody>
     </table>  
   </Data>
+  -->
 
   <Data name="is whirlpool position mint">{mintInfo.derived.whirlpoolPosition !== undefined}</Data>
   {#if mintInfo.derived.whirlpoolPosition !== undefined}

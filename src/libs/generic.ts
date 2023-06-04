@@ -5,7 +5,7 @@ import { getConnection } from "./client";
 
 type GenericAccountDerivedInfo = {}
 
-type GenericAccountInfo = {
+export type GenericAccountInfo = {
   meta: AccountMetaInfo,
   parsed: {},
   derived: GenericAccountDerivedInfo,

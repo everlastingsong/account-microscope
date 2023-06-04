@@ -24,6 +24,12 @@
     push(url);
   }
 
+  function onHexDump() {
+    const url = `/generic/${pubkey}`;
+    console.log(url);
+    push(url);
+  }
+
 </script>
 
 <main>
@@ -39,6 +45,7 @@
   <form on:submit|preventDefault={onSubmit}>
   	<input style="margin: 0.5em 0em;" bind:value={pubkey} type="text" size="64" placeholder="HJPjoWUrhoZzkNfRpHuieeFk9WcZWjwy6PBjZ81ngndJ" />
     <input type="submit" value="Check!" />
+    <input type="button" value="HexDump!" on:click={onHexDump} />
   </form>
 
   <a href="#/whirlpool/list" style="font-size:smaller; text-decoration:none;">🪧 whirlpool/list</a>

@@ -1,45 +1,18 @@
 <script lang="ts">
-  import MetaData from "../components/MetaData.svelte";
-  import ParsedData from "../components/ParsedData.svelte";
-  import DerivedData from "../components/DerivedData.svelte";
-  import ParsedAndDerivedData from "../components/ParsedAndDerivedData.svelte";
-  import Data from "../components/Data.svelte";
   import Pubkey from "../components/Pubkey.svelte";
   import { PublicKey } from "@solana/web3.js";
-  import { translateAddress } from "@coral-xyz/anchor";
-  import { getGenericAccountInfo } from "../libs/generic";
+  import { GenericAccountInfo } from "../libs/generic";
   import BN from "bn.js";
   import moment from "moment";
 
-  export let params;
+  const MAX_DATA_SIZE = 10*1024; // max 10KB (max PDA size)
 
-  let account = params.pubkey ?? "";
-
-  let genericAccountInfoPromise = isValidAddress()
-    ? getGenericAccountInfoWithData(account)
-    : new Promise<undefined>((resolve) => resolve(undefined));
-
-  async function onSubmit() {
-    if (!isValidAddress()) return;
-    genericAccountInfoPromise = getGenericAccountInfoWithData(account);
-  }
-
-  function isValidAddress() {
-    try {
-      translateAddress(account);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  async function getGenericAccountInfoWithData(pubkey: string) {
-    const genericAccountInfo = await getGenericAccountInfo(pubkey);
-    return {
-      ...genericAccountInfo,
-      data: genericAccountInfo.meta.data.slice(0, 1024*10), // max 10KB
-    };
-  }
+  export let accountInfo: GenericAccountInfo;
+  const genericAccountInfo = {
+    ...accountInfo,
+    data: accountInfo.meta.data.slice(0, MAX_DATA_SIZE),
+    overflow: accountInfo.meta.data.length > MAX_DATA_SIZE,
+  };
 
   let hover: number | undefined = undefined;
 
@@ -56,15 +29,6 @@
     if (o < offset + 16) return "within16 byte";
     if (o < offset + 32) return "within32 byte";
     return "none byte";
-  }
-
-  function toHexFragment(data: Buffer): string {
-    const hexString = data.toString("hex");
-
-    // ["XX", "XX", "XX", "XX"] <= "XXXXXXXX"
-    const hexStringArray = hexString.match(/.{1,2}/g) ?? [];
-
-    return hexStringArray.join(" ");
   }
 
   function toAsciiString(data: Buffer): string {
@@ -183,19 +147,7 @@
   }
 </script>
 
-<h2>🪣HexDump</h2>
-<form on:submit|preventDefault={onSubmit} style="margin-bottom: 1em;">
-  <input style="margin: 0.5em 0em;" bind:value={account} type="text" size="64" placeholder="account address" />
-  <input type="submit" value="Dump!" />
-</form>
-
-{#await genericAccountInfoPromise}
-  loading...
-  {account}
-{:then genericAccountInfo}
-<MetaData accountType="generic" meta={genericAccountInfo.meta} />
-
-<div style="font-size: smaller; display: flex; flex-direction: row; column-gap: 12px; font-family: Consolas, ui-monospace, SFMono-Regular, Menlo, Monaco, 'Liberation Mono', 'Courier New', monospace;">
+<div style="display: flex; flex-direction: row; column-gap: 12px; font-family: Consolas, ui-monospace, SFMono-Regular, Menlo, Monaco, 'Liberation Mono', 'Courier New', monospace;">
 
   <div style="display: flex; flex-direction: column; row-gap: 2px;">
     {#each new Array(Math.ceil(genericAccountInfo.data.length / 16)) as _, i}
@@ -220,6 +172,10 @@
       {/each}
     </div>
     {/each}
+
+    {#if genericAccountInfo.overflow}
+    ⛔ Data exceeding {MAX_DATA_SIZE/1024} KB will not be displayed.
+    {/if}
   </div>
 
   <div style="display: flex; flex-direction: column; row-gap: 2px;">
@@ -261,9 +217,6 @@
   </div>
 
 </div>
-
-
-{/await}
 
 <style>
 th, td {

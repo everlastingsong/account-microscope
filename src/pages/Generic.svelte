@@ -1,11 +1,7 @@
 <script lang="ts">
-  import MetaData from "../components/MetaData.svelte";
-  import ParsedData from "../components/ParsedData.svelte";
-  import DerivedData from "../components/DerivedData.svelte";
-  import ParsedAndDerivedData from "../components/ParsedAndDerivedData.svelte";
-  import Data from "../components/Data.svelte";
-  import Pubkey from "../components/Pubkey.svelte";
-
+  import HexDump from "../components/HexDump.svelte";
+import Laboratory from "../components/Laboratory.svelte";
+import MetaData from "../components/MetaData.svelte";
   export let params;
 
   import { getGenericAccountInfo } from "../libs/generic";
@@ -19,6 +15,12 @@
   {params.pubkey}
 {:then genericAccountInfo}
 <MetaData accountType="generic" meta={genericAccountInfo.meta} />
+
+{#if genericAccountInfo.meta.data.length > 0}
+<Laboratory>
+  <HexDump accountInfo={genericAccountInfo} />
+</Laboratory>
+{/if}
 {/await}
 
 <style>
