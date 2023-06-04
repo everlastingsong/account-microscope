@@ -5,11 +5,11 @@
 
   export let address: Address;
   export let short: boolean = false;
+  export let length: number = 5;
   export let type: string = "generic";
 
-  function getShortNotation(address: Address): string {
+  function getShortNotation(address: Address, prefixSuffixLength: number = 5): string {
     if ( !address ) return `${address}`;
-    const prefixSuffixLength = 5;
     const b58 = address.toString();
     return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
   }
@@ -76,7 +76,7 @@
 <span on:mouseenter={() => toolkit.style.setProperty("visibility", "visible")} on:mouseleave={() => toolkit.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
 <a href={path}>
 {#if short}
-<span>{getShortNotation(address)}</span>
+<span>{getShortNotation(address, length)}</span>
 {:else}
 <span>{address}</span>
 {/if}
