@@ -31,6 +31,8 @@
 
 <DerivedData>
   <Data name="supply">{mintInfo.derived.supply}</Data>
+  <Data name="metadata"><Pubkey address={mintInfo.derived.metadata} /></Data>
+
   <!--
   <Data name="largest holders (Solscan)">
     <table style="border-spacing: 0;">
@@ -51,6 +53,11 @@
   <Data name="is whirlpool position mint">{mintInfo.derived.whirlpoolPosition !== undefined}</Data>
   {#if mintInfo.derived.whirlpoolPosition !== undefined}
   <Data name="whirlpool position"><Pubkey type="whirlpool/position" address={mintInfo.derived.whirlpoolPosition} /></Data>
+  {/if}
+
+  <Data name="is whirlpool position bundle mint">{mintInfo.derived.whirlpoolPositionBundle !== undefined}</Data>
+  {#if mintInfo.derived.whirlpoolPositionBundle !== undefined}
+  <Data name="whirlpool position bundle"><Pubkey type="whirlpool/positionbundle" address={mintInfo.derived.whirlpoolPositionBundle} /></Data>
   {/if}
 </DerivedData>
 </ParsedAndDerivedData>

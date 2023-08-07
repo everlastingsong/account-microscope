@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { PublicKey } from "@solana/web3.js";
   import { MathUtil, DecimalUtil } from "@orca-so/common-sdk";
   import { TICK_ARRAY_SIZE, PoolUtil, PriceMath } from "@orca-so/whirlpools-sdk";
   import { PositionInfo } from "../libs/whirlpool";
@@ -18,8 +19,13 @@
     ratioB: string;
   };
 
-  const symbolA = positionInfo.derived.tokenInfoA.symbol;
-  const symbolB = positionInfo.derived.tokenInfoB.symbol;
+  function generateSymbolFromMint(mint: PublicKey) {
+    const mintStr = mint.toBase58();
+    return mintStr.slice(0, 4) + "..." + mintStr.slice(-4);
+  }
+
+  const symbolA = positionInfo.derived.tokenInfoA?.symbol ?? generateSymbolFromMint(positionInfo.derived.tokenMintA);
+  const symbolB = positionInfo.derived.tokenInfoB?.symbol ?? generateSymbolFromMint(positionInfo.derived.tokenMintB);
 
   const tickSpacing = positionInfo.derived.poolTickSpacing;
   const lowerIndex = positionInfo.parsed.tickLowerIndex;
@@ -47,8 +53,8 @@
   $: simulatedValue = simulate(virtualCurrentIndex);
 
   function simulate(tickIndex): SimulatedValue {
-    const decimalsA = positionInfo.derived.tokenInfoA.decimals;
-    const decimalsB = positionInfo.derived.tokenInfoB.decimals;
+    const decimalsA = positionInfo.derived.decimalsA;
+    const decimalsB = positionInfo.derived.decimalsB;
 
     const adjustDecimal = new Decimal(10).pow(decimalsA - decimalsB);
     const price = new Decimal("1.0001").pow(tickIndex).mul(adjustDecimal);

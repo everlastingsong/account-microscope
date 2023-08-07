@@ -28,8 +28,10 @@ type TokenAccountInfo = {
 
 type MintDerivedInfo = {
   supply: Decimal,
+  metadata: PublicKey,
   largestHolders: TokenHolderEntry[],
   whirlpoolPosition?: PublicKey,
+  whirlpoolPositionBundle?: PublicKey,
 }
 
 type MintInfo = {
@@ -72,9 +74,16 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const accountInfo = await connection.getAccountInfo(pubkey);
   const splMintInfo = ParsableMintInfo.parse(accountInfo.data);
 
+  // metaplex metadata
+  const metadata = PDAUtil.getPositionMetadata(pubkey).publicKey;
+
   // check if whirlpool position mint
   const positionPubkey = PDAUtil.getPosition(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
   const position = await fetcher.getPosition(positionPubkey, true);
+
+  // check if whirlpool position bundle mint
+  const positionBundlePubkey = PDAUtil.getPositionBundle(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
+  const positionBundle = await fetcher.getPositionBundle(positionBundlePubkey, true);
 
   // top 10 holders
   const largestHolders = await getTokenHolders(pubkey);
@@ -84,8 +93,10 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
     parsed: splMintInfo,
     derived: {
       supply: DecimalUtil.fromU64(splMintInfo.supply, splMintInfo.decimals),
+      metadata,
       largestHolders,
       whirlpoolPosition: position === null ? undefined : positionPubkey,
+      whirlpoolPositionBundle: positionBundle === null ? undefined : positionBundlePubkey,
     }
   };
 }
