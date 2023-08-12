@@ -4,7 +4,7 @@ import { Address, BN } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { computeOutputAmount } from "@orca-so/stablecurve";
 import { u64 } from "@solana/spl-token";
-import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
+import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getPoolConfigs } from "./orcaapi";
 import { getConnection } from "./client";
 import { getTokenList, TokenInfo } from "./orcaapi";
@@ -116,7 +116,7 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const tokenSwapAccountInfo = parseTokenSwapAccount(accountInfo.data);
 
   // get mints
@@ -170,7 +170,7 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
   const doubleDip = dd?.account;
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: tokenSwapAccountInfo,
     derived: {
       decimalsA: mints[0].decimals,

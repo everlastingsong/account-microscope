@@ -1,6 +1,6 @@
 import { Address } from "@coral-xyz/anchor";
 import { AddressUtil } from "@orca-so/common-sdk";
-import { AccountMetaInfo, toMeta } from "./account";
+import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
 import { getConnection } from "./client";
 
 type GenericAccountDerivedInfo = {}
@@ -15,10 +15,10 @@ export async function getGenericAccountInfo(addr: Address): Promise<GenericAccou
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: {},
     derived: {}
   };

@@ -6,7 +6,7 @@ import { decodeGlobalFarmBuffer, decodeUserFarmBuffer } from "@orca-so/aquafarm/
 import { Address } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
-import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
+import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getPoolConfigs } from "./orcaapi";
 import Decimal from "decimal.js";
@@ -92,7 +92,7 @@ export async function getGlobalFarmInfo(addr: Address): Promise<GlobalFarmInfo> 
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const globalFarmInfo = decodeGlobalFarmBuffer(accountInfo);
 
   // get accounts
@@ -145,7 +145,7 @@ export async function getGlobalFarmInfo(addr: Address): Promise<GlobalFarmInfo> 
   }
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: globalFarmInfo,
     derived: {
       authority,
@@ -172,7 +172,7 @@ export async function getUserFarmInfo(addr: Address): Promise<UserFarmInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const userFarmInfo = decodeUserFarmBuffer(accountInfo);
 
   // get global farm
@@ -206,7 +206,7 @@ export async function getUserFarmInfo(addr: Address): Promise<UserFarmInfo> {
   const rewardWeeklyAmount = toFixedDecimal(globalFarmInfo.derived.rewardWeeklyEmission.mul(sharePercentOfFarm.div(100)), decimalsReward);
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: userFarmInfo,
     derived: {
       rewardMint: globalFarmInfo.derived.rewardMint,

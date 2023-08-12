@@ -4,7 +4,7 @@ import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { PublicKey, ParsedAccountData } from "@solana/web3.js";
 import { u64, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { MintInfo as SplMintInfo, AccountInfo as SplAccountInfo } from "@solana/spl-token";
-import { AccountMetaInfo, toFixedDecimal, toMeta } from "./account";
+import { AccountMetaInfo, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getTokenHolders, TokenHolderEntry } from "./solscanapi";
 import Decimal from "decimal.js";
@@ -45,7 +45,7 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const splTokenAccountInfo = ParsableTokenInfo.parse(accountInfo.data);
 
   // get mint
@@ -56,7 +56,7 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
   const isATA = ataAddress.equals(pubkey);
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: splTokenAccountInfo,
     derived: {
       decimals: mint.decimals,
@@ -71,7 +71,7 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const splMintInfo = ParsableMintInfo.parse(accountInfo.data);
 
   // metaplex metadata
@@ -89,7 +89,7 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const largestHolders = await getTokenHolders(pubkey);
   
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: splMintInfo,
     derived: {
       supply: DecimalUtil.fromU64(splMintInfo.supply, splMintInfo.decimals),

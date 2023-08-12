@@ -5,7 +5,7 @@ import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
-import { AccountMetaInfo, bn2u64, toFixedDecimal, toMeta } from "./account";
+import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
@@ -82,7 +82,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const whirlpoolData = ParsableWhirlpool.parse(accountInfo.data);
 
   // get mints
@@ -198,7 +198,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   catch ( e ) {console.log(e);}
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: whirlpoolData,
     derived: {
       price: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB), decimalsB),
@@ -287,7 +287,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const positionData = ParsablePosition.parse(accountInfo.data);
 
   // get whirlpool
@@ -363,7 +363,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const isBundledPosition = !derivedPositionAddress.equals(pubkey);
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: positionData,
     derived: {
       priceLower,
@@ -432,7 +432,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(accountInfo.data);
 
   const feeTierPubkeys = [];
@@ -452,7 +452,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   });
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: whirlpoolsConfigData,
     derived: {
       defaultProtocolFeeRate: PoolUtil.getProtocolFeeRate(whirlpoolsConfigData.defaultProtocolFeeRate).toDecimal().mul(100),
@@ -475,11 +475,11 @@ export async function getFeeTierInfo(addr: Address): Promise<FeeTierInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const feeTierData = ParsableFeeTier.parse(accountInfo.data);
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: feeTierData,
     derived: {
       defaultFeeRate: PoolUtil.getFeeRate(feeTierData.defaultFeeRate).toDecimal().mul(100),
@@ -506,7 +506,7 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const tickArrayData = ParsableTickArray.parse(accountInfo.data);
 
   // get whirlpool
@@ -517,7 +517,7 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const nextTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, tickArrayData.whirlpool, tickArrayData.startTickIndex + ticksInArray).publicKey;
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: tickArrayData,
     derived: {
       prevTickArray: prevTickArrayPubkey,
@@ -794,7 +794,7 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
   const connection = getConnection();
   const fetcher = new AccountFetcher(connection);
 
-  const accountInfo = await connection.getAccountInfo(pubkey);
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const positionBundleData = ParsablePositionBundle.parse(accountInfo.data);
 
   const occupiedIndexes = PositionBundleUtil.getOccupiedBundleIndexes(positionBundleData);
@@ -824,7 +824,7 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
   const unoccupied = POSITION_BUNDLE_SIZE - occupied;
 
   return {
-    meta: toMeta(pubkey, accountInfo),
+    meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: positionBundleData,
     derived: {
       occupied,
