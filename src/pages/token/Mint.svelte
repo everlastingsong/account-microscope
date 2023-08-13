@@ -10,6 +10,9 @@
   export let params;
 
   import { getMintInfo, ACCOUNT_DEFINITION } from "../../libs/token";
+  import Laboratory from "../../components/Laboratory.svelte";
+  import TokenMintCreateAta from "../../components/TokenMintCreateATA.svelte";
+  import TokenMintRewriteAuthority from "../../components/TokenMintRewriteAuthority.svelte";
   $: mintInfoPromise = getMintInfo(params.pubkey);
 </script>
 
@@ -60,6 +63,14 @@
   <Data name="whirlpool position bundle"><Pubkey type="whirlpool/positionbundle" address={mintInfo.derived.whirlpoolPositionBundle} /></Data>
   {/if}
 </DerivedData>
+<Laboratory>
+  <Data name="create ATA account">
+    <TokenMintCreateAta {mintInfo} />
+  </Data>
+  <Data name="rewrite mintAuthority">
+    <TokenMintRewriteAuthority {mintInfo} />
+  </Data>
+</Laboratory>
 </ParsedAndDerivedData>
 {/await}
 

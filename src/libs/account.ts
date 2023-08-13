@@ -54,7 +54,8 @@ export type AccountJSON = {
   },
 };
 
-export function toAccountJSON(meta: AccountMetaInfo): AccountJSON {
+export function toAccountJSON(meta: AccountMetaInfo, embedSlotContext: boolean): AccountJSON {
+  const slotContext = embedSlotContext ? { slotContext: meta.slotContext } : {};
   return {
     pubkey: meta.pubkey.toBase58(),
     account: {
@@ -64,5 +65,6 @@ export function toAccountJSON(meta: AccountMetaInfo): AccountJSON {
       rentEpoch: meta.rentEpoch ?? 0,
       data: [meta.data.toString("base64"), "base64"],
     },
+    ...slotContext,
   };
 }

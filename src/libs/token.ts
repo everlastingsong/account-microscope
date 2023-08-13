@@ -20,7 +20,7 @@ type TokenAccountDerivedInfo = {
   isATA: boolean,
 }
 
-type TokenAccountInfo = {
+export type TokenAccountInfo = {
   meta: AccountMetaInfo,
   parsed: SplAccountInfo,
   derived: TokenAccountDerivedInfo,
@@ -34,7 +34,7 @@ type MintDerivedInfo = {
   whirlpoolPositionBundle?: PublicKey,
 }
 
-type MintInfo = {
+export type MintInfo = {
   meta: AccountMetaInfo,
   parsed: SplMintInfo,
   derived: MintDerivedInfo,

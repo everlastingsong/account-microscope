@@ -4,13 +4,14 @@
   import { AccountMetaInfo, toAccountJSON } from "../libs/account";
   import { lamports2sol } from "../libs/utils";
   import { createBlobFromObject, downloadFileAs } from "../libs/fileutils";
+  import DownloadJsonButton from "./DownloadJSONButton.svelte";
 
   export let meta: AccountMetaInfo;
   export let accountType: string;
 
   function download() {
-    const account = toAccountJSON(meta);
-    const filename = `${meta.pubkey}.${meta.slotContext}.json`;
+    const account = toAccountJSON(meta, true);
+    const filename = `${meta.pubkey}.json`;
     downloadFileAs(createBlobFromObject(account), filename);
   }
 </script>
@@ -22,4 +23,4 @@
   <Data name="lamports" type="u64">{meta.lamports} ({lamports2sol(meta.lamports)} SOL)</Data>
   <Data name="data size">{meta.data.length}</Data>
 </dl>
-<button on:click={download}>Download JSON</button>
+<DownloadJsonButton {download} />
