@@ -2,17 +2,12 @@
   import { Address } from "@coral-xyz/anchor";
   import { getRPC } from "../libs/client";
   import { getTokenList, TokenInfo } from "../libs/orcaapi";
+  import { getShortAddressNotation } from "../libs/utils";
 
   export let address: Address;
   export let short: boolean = false;
   export let length: number = 5;
   export let type: string = "generic";
-
-  function getShortNotation(address: Address, prefixSuffixLength: number = 5): string {
-    if ( !address ) return `${address}`;
-    const b58 = address.toString();
-    return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
-  }
 
   function getSolscanURL(address: Address): string {
     if ( !address ) return "";
@@ -76,7 +71,7 @@
 <span on:mouseenter={() => toolkit.style.setProperty("visibility", "visible")} on:mouseleave={() => toolkit.style.setProperty("visibility", "hidden")} style="cursor: pointer;">
 <a href={path}>
 {#if short}
-<span>{getShortNotation(address, length)}</span>
+<span>{getShortAddressNotation(address, length)}</span>
 {:else}
 <span>{address}</span>
 {/if}

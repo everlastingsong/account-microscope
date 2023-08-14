@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { DecimalUtil, U64_MAX } from "@orca-so/common-sdk";
+import { DecimalUtil, U64_MAX, Address } from "@orca-so/common-sdk";
 import BN from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 
@@ -14,6 +14,12 @@ export function u64ToDecimal(u64Amount: BN, decimals: number): Decimal {
 
 export function decimalToU64(decimalAmount: Decimal, decimals: number): BN {
   return DecimalUtil.toU64(decimalAmount, decimals);
+}
+
+export function getShortAddressNotation(address: Address, prefixSuffixLength: number = 5): string {
+  if ( !address ) return `${address}`;
+  const b58 = address.toString();
+  return b58.substring(0, prefixSuffixLength) + "..." + b58.substring(b58.length-prefixSuffixLength);
 }
 
 const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;

@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import fetch from "node-fetch";
 import moment from "moment";
 import { Address, BN } from "@coral-xyz/anchor";
+import { getShortAddressNotation } from "./utils";
 
 const V1_WHIRLPOOL_LIST = "https://api.mainnet.orca.so/v1/whirlpool/list";
 
@@ -42,12 +43,15 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
 
   const list: WhirlpoolListEntry[] = [];
   response.whirlpools.forEach((p) => {
+    const symbolA = warnUndefined(p.tokenA.symbol, p.tokenA.mint);
+    const symbolB = warnUndefined(p.tokenB.symbol, p.tokenB.mint);
+
     list.push({
       address: new PublicKey(p.address),
-      name: `${p.tokenA.symbol}/${p.tokenB.symbol}(${p.tickSpacing})`,
-      invertedName: `${p.tokenB.symbol}/${p.tokenA.symbol}(${p.tickSpacing})`,
-      symbolA: p.tokenA.symbol,
-      symbolB: p.tokenB.symbol,
+      name: `${symbolA}/${symbolB}(${p.tickSpacing})`,
+      invertedName: `${symbolB}/${symbolA}(${p.tickSpacing})`,
+      symbolA,
+      symbolB,
       mintA: new PublicKey(p.tokenA.mint),
       mintB: new PublicKey(p.tokenB.mint),
       tickSpacing: p.tickSpacing,
@@ -106,8 +110,8 @@ export async function getTokenList(): Promise<TokenList> {
   response.tokens.forEach((t) => {
     list.push({
       mint: new PublicKey(t.mint),
-      symbol: t.symbol,
-      name: t.name,
+      symbol: warnUndefined(t.symbol, t.mint),
+      name: warnUndefined(t.name, t.mint),
       decimals: t.decimals,
       logoURI: t.logoURI,
       coingeckoId: t.coingeckoId,
@@ -311,4 +315,8 @@ export async function getPoolConfigs(): Promise<PoolConfigs> {
   const poolConfigs = new PoolConfigs(pools, farms, doubledips);
   _cachedPoolConfigs = poolConfigs;
   return poolConfigs;
+}
+
+function warnUndefined(s: string | undefined, mint: Address): string {
+  return s?.trim() || `❓(${getShortAddressNotation(mint, 4)})`; // use "||" to process "" as undefined
 }
