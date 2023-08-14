@@ -12,15 +12,18 @@ export type WhirlpoolCloneConfig = {
   withTickArray: boolean;
   withMintAccount: boolean;
   withVaultTokenAccount: boolean;
+  withPosition: boolean;
 };
 
 export type WhirlpoolCloneAccounts = {
+  slotContext: number;
   whirlpool: AccountJSON;
   whirlpoolsConfig?: AccountJSON;
   feeTier?: AccountJSON;
   tickArray?: AccountJSON[];
   mintAccounts?: AccountJSON[];
   vaultTokenAccounts?: AccountJSON[];
+  positionAccounts?: AccountJSON[];
 };
 
 type AccountInfoMap = {
@@ -91,20 +94,45 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     {dataSize: getAccountSize(AccountName.TickArray)},
     {memcmp: {offset: 9956, bytes: whirlpoolPubkey.toBase58()}},
   ];
-  const tickArrayAccountsPre = config.withTickArray
-    ? await getProgramAccountsInfo(connection, programId, tickArrayFilters, commitment)
-    : EMPTY_ACCOUNT_INFO_MAP;
-  const accounts = await getMultipleAccountsInfo(connection, addresses, commitment, tickArrayAccountsPre.slotContext);
-  const tickArrayAccountsPost = config.withTickArray
-    ? await getProgramAccountsInfo(connection, programId, tickArrayFilters, "confirmed", accounts.slotContext)
-    : EMPTY_ACCOUNT_INFO_MAP;
+  const positionFilters: GetProgramAccountsFilter[] = [
+    {dataSize: getAccountSize(AccountName.Position)},
+    {memcmp: {offset: 8, bytes: whirlpoolPubkey.toBase58()}},
+  ];
+
+  const tickArrayAccountsPrePromise = config.withTickArray
+    ? getProgramAccountsInfo(connection, programId, tickArrayFilters, commitment)
+    : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
+  const positionAccountsPrePromise = config.withPosition
+    ? getProgramAccountsInfo(connection, programId, positionFilters, commitment)
+    : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
+  const [tickArrayAccountsPre, positionAccountsPre] = await Promise.all([
+    tickArrayAccountsPrePromise,
+    positionAccountsPrePromise,
+  ]);
+
+  const minSlotContext = Math.max(tickArrayAccountsPre.slotContext, positionAccountsPre.slotContext);
+  const accounts = await getMultipleAccountsInfo(connection, addresses, commitment, minSlotContext);
+
+  const tickArrayAccountsPostPromise = config.withTickArray
+    ? getProgramAccountsInfo(connection, programId, tickArrayFilters, commitment, accounts.slotContext)
+    : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
+  const positionAccountsPostPromise = config.withPosition
+    ? getProgramAccountsInfo(connection, programId, positionFilters, commitment, accounts.slotContext)
+    : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
+  const [tickArrayAccountsPost, positionAccountsPost] = await Promise.all([
+    tickArrayAccountsPostPromise,
+    positionAccountsPostPromise,
+  ]);
 
   // align slotContext
   const slotContext = accounts.slotContext;
   const tickArrayAccountsPreUpdated = updateAccountInfoBy(tickArrayAccountsPre, accounts);
   const tickArrayAccountsPostUpdated = updateAccountInfoBy(tickArrayAccountsPost, accounts);
   if (!isEqualAccountInfo(tickArrayAccountsPreUpdated, tickArrayAccountsPostUpdated)) {
-    throw new Error("cannot fetch accounts consistently");
+    throw new Error("cannot fetch TickArray accounts consistently");
+  }
+  if (!isEqualAccountInfo(positionAccountsPre, positionAccountsPost)) {
+    throw new Error("cannot fetch Position accounts consistently");
   }
 
   function pack(pubkey: PublicKey, accountInfoMap: AccountInfoMap): AccountJSON {
@@ -113,9 +141,11 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
   }
 
   const tickArrayPubkeys = Object.keys(tickArrayAccountsPostUpdated.accounts).map((k) => new PublicKey(k));
+  const positionPubkeys = Object.keys(positionAccountsPost.accounts).map((k) => new PublicKey(k));
   const mintAccountPubkeys = [mintAccountAPubkey, mintAccountBPubkey, ...mintAccountRewardsPubkeys];
   const vaultTokenAccountPubkeys = [vaultTokenAccountAPubkey, vaultTokenAccountBPubkey, ...vaultTokenAccountRewardsPubkeys];
   return {
+    slotContext,
     whirlpool: pack(whirlpoolPubkey, accounts),
     whirlpoolsConfig: config.withWhirlpoolsConfig
       ? pack(whirlpoolsConfigPubkey, accounts)
@@ -131,6 +161,9 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
       : undefined,
     vaultTokenAccounts: config.withVaultTokenAccount
       ? vaultTokenAccountPubkeys.map((k) => pack(k, accounts))
+      : undefined,
+    positionAccounts: config.withPosition
+      ? positionPubkeys.map((k) => pack(k, positionAccountsPost))
       : undefined,
   };
 }

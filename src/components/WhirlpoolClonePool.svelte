@@ -11,6 +11,7 @@
   let withTickArray: boolean = true;
   let withVaultTokenAccount: boolean = true;
   let withMintAccount: boolean = true;
+  let withPosition: boolean = false;
 
   async function download() {
     const config: WhirlpoolCloneConfig = {
@@ -19,8 +20,10 @@
       withTickArray,
       withVaultTokenAccount,
       withMintAccount,
+      withPosition,
     };
 
+    // TODO: try/catch
     const result = await cloneWhirlpool(whirlpoolInfo, config);
 
     console.log("cloneWhirlpool", result);
@@ -36,6 +39,7 @@
     <tr><td><InputCheckBox bind:value={withTickArray} label="with TickArray" /></td></tr>
     <tr><td><InputCheckBox bind:value={withVaultTokenAccount} label="with VaultTokenAccount" /></td></tr>
     <tr><td><InputCheckBox bind:value={withMintAccount} label="with MintAccount" /></td></tr>
+    <tr><td><InputCheckBox bind:value={withPosition} label="with Position" /></td></tr>
     <tr><td><DownloadJsonButton {download} /></td></tr>
   </table>
 </div>
