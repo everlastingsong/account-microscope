@@ -20,10 +20,10 @@ export type WhirlpoolCloneAccounts = {
   whirlpool: AccountJSON;
   whirlpoolsConfig?: AccountJSON;
   feeTier?: AccountJSON;
-  tickArray?: AccountJSON[];
+  tickArrays?: AccountJSON[];
   mintAccounts?: AccountJSON[];
   vaultTokenAccounts?: AccountJSON[];
-  positionAccounts?: AccountJSON[];
+  positions?: AccountJSON[];
 };
 
 type AccountInfoMap = {
@@ -69,6 +69,9 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
   const mintAccountRewardsPubkeys = initializedRewardInfos.map((ri) => ri.mint);
   const vaultTokenAccountRewardsPubkeys = initializedRewardInfos.map((ri) => ri.vault);
 
+  const mintAccountPubkeys = dedup([mintAccountAPubkey, mintAccountBPubkey, ...mintAccountRewardsPubkeys]);
+  const vaultTokenAccountPubkeys = [vaultTokenAccountAPubkey, vaultTokenAccountBPubkey, ...vaultTokenAccountRewardsPubkeys];
+
   // Neighborhood TickArrays, which are prone to change in trade, are obtained by gMA with guaranteed consistency.
   const neighboringTickArrayPubkeys = [-3, -2, -1, 0, +1, +2, +3].map((offset) => {
     const startTickIndex = TickUtil.getStartTickIndex(parsed.tickCurrentIndex, parsed.tickSpacing, offset);
@@ -81,12 +84,8 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     whirlpoolsConfigPubkey,
     feeTierPubkey,
     ...neighboringTickArrayPubkeys,
-    mintAccountAPubkey,
-    mintAccountBPubkey,
-    ...mintAccountRewardsPubkeys,
-    vaultTokenAccountAPubkey,
-    vaultTokenAccountBPubkey,
-    ...vaultTokenAccountRewardsPubkeys,
+    ...mintAccountPubkeys,
+    ...vaultTokenAccountPubkeys,
   ];
 
   const commitment: Commitment = "confirmed";
@@ -146,8 +145,6 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
 
   const tickArrayPubkeys = Object.keys(tickArrayAccountsPostUpdated.accounts).map((k) => new PublicKey(k));
   const positionPubkeys = Object.keys(positionAccountsPost.accounts).map((k) => new PublicKey(k));
-  const mintAccountPubkeys = [mintAccountAPubkey, mintAccountBPubkey, ...mintAccountRewardsPubkeys];
-  const vaultTokenAccountPubkeys = [vaultTokenAccountAPubkey, vaultTokenAccountBPubkey, ...vaultTokenAccountRewardsPubkeys];
   return {
     slotContext,
     whirlpool: pack(whirlpoolPubkey, accounts),
@@ -157,7 +154,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     feeTier: config.withFeeTier
       ? pack(feeTierPubkey, accounts)
       : undefined,
-    tickArray: config.withTickArray
+    tickArrays: config.withTickArray
       ? tickArrayPubkeys.map((k) => pack(k, tickArrayAccountsPostUpdated))
       : undefined,
     mintAccounts: config.withMintAccount
@@ -166,7 +163,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     vaultTokenAccounts: config.withVaultTokenAccount
       ? vaultTokenAccountPubkeys.map((k) => pack(k, accounts))
       : undefined,
-    positionAccounts: config.withPosition
+    positions: config.withPosition
       ? positionPubkeys.map((k) => pack(k, positionAccountsPost))
       : undefined,
   };
@@ -241,4 +238,9 @@ function updateAccountInfoBy(base: AccountInfoMap, update: AccountInfoMap): Acco
   }
 
   return updated;
+}
+
+function dedup(pubkeys: PublicKey[]): PublicKey[] {
+  const puekeySet = new Set<string>(pubkeys.map((k) => k.toBase58()));
+  return Array.from(puekeySet).map((k) => new PublicKey(k));
 }
