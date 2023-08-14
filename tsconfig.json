@@ -3,6 +3,7 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules/*", "__sapper__/*", "docs/*"],
   "compilerOptions": {
+    "lib": ["es2019", "dom"],
     "importsNotUsedAsValues": "remove",
     "resolveJsonModule": true,
     "esModuleInterop": true,

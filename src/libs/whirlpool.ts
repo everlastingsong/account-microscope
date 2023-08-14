@@ -71,7 +71,7 @@ type WhirlpoolDerivedInfo = {
   tickArrayTradableAmounts: TickArrayTradableAmounts,
 }
 
-type WhirlpoolInfo = {
+export type WhirlpoolInfo = {
   meta: AccountMetaInfo,
   parsed: WhirlpoolData,
   derived: WhirlpoolDerivedInfo,

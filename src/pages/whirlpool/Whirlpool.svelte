@@ -13,6 +13,8 @@
   $: whirlpoolInfoPromise = getWhirlpoolInfo(params.pubkey);
 
   import { TokenInfo } from "../../libs/orcaapi";
+  import Laboratory from "../../components/Laboratory.svelte";
+  import WhirlpoolClonePool from "../../components/WhirlpoolClonePool.svelte";
   function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
     if (tokenInfo === undefined) return "";
     return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
@@ -212,6 +214,11 @@
     </table>  
   </Data>
 </DerivedData>
+<Laboratory>
+  <Data name="clone whirlpool">
+    <WhirlpoolClonePool {whirlpoolInfo} />
+  </Data>
+</Laboratory>
 </ParsedAndDerivedData>
 {/await}
 

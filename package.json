@@ -31,10 +31,14 @@
     "@orca-so/aquafarm": "^0.0.12",
     "@orca-so/stablecurve": "^1.0.6",
     "@orca-so/whirlpools-sdk": "^0.10.0",
+    "@solana/web3.js": "^1.78.4",
     "@rollup/plugin-json": "^5.0.1",
     "assert": "^2.0.0",
+    "jszip": "^3.10.1",
     "moment": "^2.29.4",
     "node-fetch": "^2.6.7",
+    "p-retry": "^4.6.2",
+    "p-timeout": "^4.1.0",
     "process": "^0.11.10",
     "qs": "^6.11.0",
     "rollup-plugin-node-builtins": "^2.1.2",
@@ -43,6 +47,7 @@
     "svelte-navigator": "^3.2.2"
   },
   "resolutions": {
+    "@solana/web3.js": "^1.78.4",
     "@solana/spl-token": "^0.1.8"
   }
 }
