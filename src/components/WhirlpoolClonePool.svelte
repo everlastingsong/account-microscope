@@ -9,13 +9,24 @@
 
   export let whirlpoolInfo: WhirlpoolInfo;
 
-  let appendFilenamePrefix: boolean = true;
+  let appendFilenamePrefix: boolean = false;
+
   let withWhirlpoolsConfig: boolean = true;
   let withFeeTier: boolean = true;
   let withTickArray: boolean = true;
   let withVaultTokenAccount: boolean = true;
   let withMintAccount: boolean = true;
   let withPosition: boolean = false;
+
+  enum ProcessingState {
+    NOT_PROCESSING = "not processing",
+    NOT_PROCESSING_RETRY = "not processing (retry)",
+    FETCHING = "fetching",
+    PACKING = "packing",
+    DOWNLOADING = "downloading",
+  }
+  let processingState = ProcessingState.NOT_PROCESSING;
+  $: downloadButtonState = getDownloadButtonState(processingState, withTickArray || withPosition);
 
   async function download() {
     const config: WhirlpoolCloneConfig = {
@@ -27,37 +38,57 @@
       withPosition,
     };
 
-    // TODO: try/catch
-    const result = await cloneWhirlpool(whirlpoolInfo, config);
-    console.log("cloneWhirlpool", result);
+    try {
+      processingState = ProcessingState.FETCHING;
+      const result = await cloneWhirlpool(whirlpoolInfo, config);
 
-    const zipfile = new JSZip();
-    function pack(accountJSON: AccountJSON | undefined, filenamePrefix: string) {
-      if (!accountJSON) return;
-      const filename = appendFilenamePrefix
-        ? `${filenamePrefix}.${accountJSON.pubkey}.json`
-        : `${accountJSON.pubkey}.json`;
-      zipfile.file(filename, createBlobFromObject(accountJSON));
+      processingState = ProcessingState.PACKING;
+      const zipfile = new JSZip();
+      function pack(accountJSON: AccountJSON | undefined, filenamePrefix: string) {
+        if (!accountJSON) return;
+        const filename = appendFilenamePrefix
+          ? `${filenamePrefix}.${accountJSON.pubkey}.json`
+          : `${accountJSON.pubkey}.json`;
+        zipfile.file(filename, createBlobFromObject(accountJSON));
+      }
+
+      pack(result.whirlpool, "whirlpool");
+      pack(result.whirlpoolsConfig, "config");
+      pack(result.feeTier, "feetier");
+      result.tickArrays?.forEach((ta) => pack(ta, "tickarray"));
+      result.vaultTokenAccounts?.forEach((vta) => pack(vta, "vault"));
+      result.mintAccounts?.forEach((ma) => pack(ma, "mint"));
+      result.positions?.forEach((p) => pack(p, "position"));
+
+      const filename = `${whirlpoolInfo.meta.pubkey.toBase58()}.${result.slotContext}.zip`;
+      const zipBlob = await zipfile.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: {
+          level: 5, // 1(fastest) - 9(best compression)
+        },
+      });
+
+      processingState = ProcessingState.DOWNLOADING;
+      downloadFileAs(zipBlob, filename);
+      processingState = ProcessingState.NOT_PROCESSING;
+    } catch (err) {
+      console.error(err);
+      processingState = ProcessingState.NOT_PROCESSING_RETRY;
     }
+  }
 
-    pack(result.whirlpool, "whirlpool");
-    pack(result.whirlpoolsConfig, "config");
-    pack(result.feeTier, "feetier");
-    result.tickArrays?.forEach((ta) => pack(ta, "tickarray"));
-    result.vaultTokenAccounts?.forEach((vta) => pack(vta, "vault"));
-    result.mintAccounts?.forEach((ma) => pack(ma, "mint"));
-    result.positions?.forEach((p) => pack(p, "position"));
-
-    const filename = `${whirlpoolInfo.meta.pubkey.toBase58()}.${result.slotContext}.zip`;
-    const zipBlob = await zipfile.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: {
-        level: 5, // 1(fastest) - 9(best compression)
-      },
-    });
-
-    downloadFileAs(zipBlob, filename);
+  function getDownloadButtonState(state: ProcessingState, useGetProgramAccounts: boolean): [boolean, string] {
+    switch (state) {
+      case ProcessingState.NOT_PROCESSING:
+        return [false, useGetProgramAccounts ? "Download JSON! ( takes up to 1 minute ⌛ )" : "Download JSON!"];
+      case ProcessingState.NOT_PROCESSING_RETRY:
+        return [false, "Download JSON! ( retry )"];
+      case ProcessingState.FETCHING:
+      case ProcessingState.PACKING: // very short period of time
+      case ProcessingState.DOWNLOADING: // very short period of time
+        return [true, "Processing..."];
+    }
   }
 </script>
 
@@ -70,7 +101,7 @@
     <tr><td><InputCheckBox bind:value={withVaultTokenAccount} label="with VaultTokenAccount" /></td></tr>
     <tr><td><InputCheckBox bind:value={withMintAccount} label="with MintAccount" /></td></tr>
     <tr><td><InputCheckBox bind:value={withPosition} label="with Position" /></td></tr>
-    <tr><td><DownloadJsonButton {download} /></td></tr>
+    <tr><td><DownloadJsonButton {download} disabled={downloadButtonState[0]} label={downloadButtonState[1]} width={320} /></td></tr>
   </table>
 </div>
 

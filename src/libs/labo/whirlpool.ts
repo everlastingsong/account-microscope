@@ -36,7 +36,7 @@ const EMPTY_ACCOUNT_INFO_MAP: AccountInfoMap = {
   accounts: {},
 };
 
-const CLONE_WHIRLPOOL_IMPL_TIMEOUT = 10 * 1000; // ms
+const CLONE_WHIRLPOOL_IMPL_TIMEOUT = 20 * 1000; // ms
 const DEFAULT_RETRY_OPTIONS: pRetry.Options = {
   retries: 5,
   minTimeout: 1 * 1000, // ms
