@@ -126,11 +126,15 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
 
   // align slotContext
   const slotContext = accounts.slotContext;
+  // If the results pre and post gMA are consistent, it can be concluded that there was no change.
+  // The TickArray around the current price, which is prone to change in a trade,
+  // is overwritten by the gMA result, so consistency can be guaranteed.
   const tickArrayAccountsPreUpdated = updateAccountInfoBy(tickArrayAccountsPre, accounts);
   const tickArrayAccountsPostUpdated = updateAccountInfoBy(tickArrayAccountsPost, accounts);
   if (!isEqualAccountInfo(tickArrayAccountsPreUpdated, tickArrayAccountsPostUpdated)) {
     throw new Error("cannot fetch TickArray accounts consistently");
   }
+  // Position does not change with the trade, so just make sure it matches pre and post the gMA.
   if (!isEqualAccountInfo(positionAccountsPre, positionAccountsPost)) {
     throw new Error("cannot fetch Position accounts consistently");
   }
