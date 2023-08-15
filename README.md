@@ -42,6 +42,12 @@ You can download the same JSON as the following command with a click of a button
 
 <img width="1034" alt="screenshot 2023-08-13 10 29 47" src="https://github.com/everlastingsong/account-microscope/assets/109891005/30c3bf9b-e23d-4fa8-bf77-22de684bf5c4">
 
+### Whirlpool cloning
+You can download all the accounts you need to make Whirlpool work with LocalValidator in one go.
+It is easy to reproduce and test mainnet pools such as SOL/USDC in LocalValidator.
+
+<img width="1662" alt="screenshot 2023-08-15 9 19 50" src="https://github.com/everlastingsong/account-microscope/assets/109891005/3948f552-f403-42a3-84d8-3a10716e7a50">
+
 ### It makes you a millionaire in LocalValidator
 You can download TokenProgram related accounts to mint an arbitrary amount of tokens of your choice in LocalValidator.
 
