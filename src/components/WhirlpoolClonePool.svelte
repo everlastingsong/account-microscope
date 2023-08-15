@@ -6,6 +6,7 @@
   import DownloadJsonButton from "./DownloadJSONButton.svelte";
   import InputCheckBox from "./InputCheckBox.svelte";
   import JSZip from "jszip";
+  import InputRadioGroup from "./InputRadioGroup.svelte";
 
   export let whirlpoolInfo: WhirlpoolInfo;
 
@@ -18,6 +19,10 @@
   let withMintAccount: boolean = true;
   let withPosition: boolean = false;
 
+  const tickArraySelectionOptions = ["only neighborhood", "all"];
+  let tickArraySelection = 0;
+  $: isAllTickArray = tickArraySelection === 1;
+
   enum ProcessingState {
     NOT_PROCESSING = "not processing",
     NOT_PROCESSING_RETRY = "not processing (retry)",
@@ -26,7 +31,7 @@
     DOWNLOADING = "downloading",
   }
   let processingState = ProcessingState.NOT_PROCESSING;
-  $: downloadButtonState = getDownloadButtonState(processingState, withTickArray || withPosition);
+  $: downloadButtonState = getDownloadButtonState(processingState, (withTickArray && isAllTickArray) || withPosition);
 
   async function download() {
     const config: WhirlpoolCloneConfig = {
@@ -36,6 +41,7 @@
       withVaultTokenAccount,
       withMintAccount,
       withPosition,
+      tickArraySelection: isAllTickArray ? "all" : "neighborhood",
     };
 
     try {
@@ -97,7 +103,16 @@
     <tr><td><InputCheckBox bind:value={appendFilenamePrefix} label="append filename prefix" /></td></tr>
     <tr><td><InputCheckBox bind:value={withWhirlpoolsConfig} label="with WhirlpoolsConfig" /></td></tr>
     <tr><td><InputCheckBox bind:value={withFeeTier} label="with FeeTier" /></td></tr>
-    <tr><td><InputCheckBox bind:value={withTickArray} label="with TickArray" /></td></tr>
+    <tr><td style="display: flex; flex-direction: row;">
+      <InputCheckBox bind:value={withTickArray} label="with TickArray" />
+      &nbsp;(
+        <InputRadioGroup
+          group="tickArraySelection"
+          bind:selected={tickArraySelection}
+          values={tickArraySelectionOptions}
+        />
+      &nbsp;)
+    </td></tr>
     <tr><td><InputCheckBox bind:value={withVaultTokenAccount} label="with VaultTokenAccount" /></td></tr>
     <tr><td><InputCheckBox bind:value={withMintAccount} label="with MintAccount" /></td></tr>
     <tr><td><InputCheckBox bind:value={withPosition} label="with Position" /></td></tr>

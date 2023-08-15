@@ -13,6 +13,7 @@ export type WhirlpoolCloneConfig = {
   withMintAccount: boolean;
   withVaultTokenAccount: boolean;
   withPosition: boolean;
+  tickArraySelection: "all" | "neighborhood";
 };
 
 export type WhirlpoolCloneAccounts = {
@@ -56,6 +57,8 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
   const connection = getConnection();
   const programId = meta.owner;
 
+  const withAllTickArray = config.withTickArray && config.tickArraySelection === "all";
+
   const whirlpoolPubkey = meta.pubkey;
   const whirlpoolsConfigPubkey = parsed.whirlpoolsConfig;
   const feeTierPubkey = PDAUtil.getFeeTier(programId, whirlpoolsConfigPubkey, parsed.tickSpacing).publicKey;
@@ -73,7 +76,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
   const vaultTokenAccountPubkeys = [vaultTokenAccountAPubkey, vaultTokenAccountBPubkey, ...vaultTokenAccountRewardsPubkeys];
 
   // Neighborhood TickArrays, which are prone to change in trade, are obtained by gMA with guaranteed consistency.
-  const neighboringTickArrayPubkeys = [-3, -2, -1, 0, +1, +2, +3].map((offset) => {
+  const neighborhoodTickArrayPubkeys = [-3, -2, -1, 0, +1, +2, +3].map((offset) => {
     const startTickIndex = TickUtil.getStartTickIndex(parsed.tickCurrentIndex, parsed.tickSpacing, offset);
     return PDAUtil.getTickArray(programId, meta.pubkey, startTickIndex).publicKey;
   });
@@ -83,7 +86,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     whirlpoolPubkey,
     whirlpoolsConfigPubkey,
     feeTierPubkey,
-    ...neighboringTickArrayPubkeys,
+    ...neighborhoodTickArrayPubkeys,
     ...mintAccountPubkeys,
     ...vaultTokenAccountPubkeys,
   ];
@@ -98,7 +101,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     {memcmp: {offset: 8, bytes: whirlpoolPubkey.toBase58()}},
   ];
 
-  const tickArrayAccountsPrePromise = config.withTickArray
+  const tickArrayAccountsPrePromise = withAllTickArray
     ? getProgramAccountsInfo(connection, programId, tickArrayFilters, commitment)
     : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
   const positionAccountsPrePromise = config.withPosition
@@ -112,7 +115,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
   const minSlotContext = Math.max(tickArrayAccountsPre.slotContext, positionAccountsPre.slotContext);
   const accounts = await getMultipleAccountsInfo(connection, addresses, commitment, minSlotContext);
 
-  const tickArrayAccountsPostPromise = config.withTickArray
+  const tickArrayAccountsPostPromise = withAllTickArray
     ? getProgramAccountsInfo(connection, programId, tickArrayFilters, commitment, accounts.slotContext)
     : Promise.resolve(EMPTY_ACCOUNT_INFO_MAP);
   const positionAccountsPostPromise = config.withPosition
@@ -143,7 +146,7 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
     return toAccountJSON(meta, true);
   }
 
-  const tickArrayPubkeys = Object.keys(tickArrayAccountsPostUpdated.accounts).map((k) => new PublicKey(k));
+  const allTickArrayPubkeys = Object.keys(tickArrayAccountsPostUpdated.accounts).map((k) => new PublicKey(k));
   const positionPubkeys = Object.keys(positionAccountsPost.accounts).map((k) => new PublicKey(k));
   return {
     slotContext,
@@ -155,7 +158,10 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
       ? pack(feeTierPubkey, accounts)
       : undefined,
     tickArrays: config.withTickArray
-      ? tickArrayPubkeys.map((k) => pack(k, tickArrayAccountsPostUpdated))
+      ? (config.tickArraySelection === "all"
+          ? allTickArrayPubkeys.map((k) => pack(k, tickArrayAccountsPostUpdated))
+          : neighborhoodTickArrayPubkeys.filter((k) => !!accounts.accounts[k.toBase58()]).map((k) => pack(k, accounts))
+        )
       : undefined,
     mintAccounts: config.withMintAccount
       ? mintAccountPubkeys.map((k) => pack(k, accounts))
