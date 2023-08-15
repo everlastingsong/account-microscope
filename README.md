@@ -44,6 +44,7 @@ You can download the same JSON as the following command with a click of a button
 
 ### Whirlpool cloning
 You can download all the accounts you need to make Whirlpool work with LocalValidator in one go.
+
 It is easy to reproduce and test mainnet pools such as SOL/USDC in LocalValidator.
 
 <img width="1662" alt="screenshot 2023-08-15 9 19 50" src="https://github.com/everlastingsong/account-microscope/assets/109891005/3948f552-f403-42a3-84d8-3a10716e7a50">
