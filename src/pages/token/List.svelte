@@ -42,7 +42,7 @@
   loading...
 {:then tokenAccountList}
 
-<h4>decimals > 0</h4>
+<h4>decimals &gt; 0</h4>
 <table style="border-spacing: 0; font-size: smaller;">
   <thead>
     <th>address</th>

@@ -6,6 +6,7 @@
   import Data from "../../components/Data.svelte";
   import Pubkey from "../../components/Pubkey.svelte";
   import AccountDefinition from "../../components/AccountDefinition.svelte";
+  import { push } from "svelte-spa-router";
 
   export let params;
 
@@ -15,6 +16,7 @@
   import { TokenInfo } from "../../libs/orcaapi";
   import Laboratory from "../../components/Laboratory.svelte";
   import WhirlpoolClonePool from "../../components/WhirlpoolClonePool.svelte";
+  import { on } from "events";
   function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
     if (tokenInfo === undefined) return "";
     return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
@@ -23,6 +25,12 @@
   function price_unit_if_not_undefined(baseTokenInfo: TokenInfo, quoteTokenInfo: TokenInfo): string {
     if (baseTokenInfo === undefined || quoteTokenInfo === undefined) return "";
     return `${quoteTokenInfo.symbol}/${baseTokenInfo.symbol}`;
+  }
+
+  function listPositions() {
+    const url = `/whirlpool/listPositions/${params.pubkey}`;
+    console.log(url);
+    push(url);
   }
 </script>
 
@@ -217,6 +225,9 @@
 <Laboratory>
   <Data name="clone whirlpool">
     <WhirlpoolClonePool {whirlpoolInfo} />
+  </Data>
+  <Data name="list positions">
+    <button on:click={listPositions} style="margin-top: 0.5em; padding-left: 30px; padding-right: 30px;">List Positions!</button>
   </Data>
 </Laboratory>
 </ParsedAndDerivedData>

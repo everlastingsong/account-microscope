@@ -1,5 +1,5 @@
-import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE } from "@orca-so/whirlpools-sdk";
+import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
@@ -233,6 +233,12 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   };
 }
 
+export enum PositionStatusString {
+  PriceIsInRange = "Price is In Range",
+  PriceIsAboveRange = "Price is Above Range",
+  PriceIsBelowRange = "Price is Below Range",
+}
+
 type PositionDerivedInfo = {
   priceLower: Decimal,
   priceUpper: Decimal,
@@ -263,7 +269,7 @@ type PositionDerivedInfo = {
   rewardAmount0?: Decimal,
   rewardAmount1?: Decimal,
   rewardAmount2?: Decimal,
-  status: string,
+  status: PositionStatusString,
   sharePercentOfLiquidity: Decimal,
   tickCurrentIndex: number,
   currentSqrtPrice: BN,
@@ -401,7 +407,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       rewardAmount0: rewardsQuote[0] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[0], decimalsR0),
       rewardAmount1: rewardsQuote[1] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[1], decimalsR1),
       rewardAmount2: rewardsQuote[2] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[2], decimalsR2),
-      status: status === PositionStatus.InRange ? "Price is In Range" : (status === PositionStatus.AboveRange ? "Price is Above Range" : "Price is Below Range"),
+      status: status === PositionStatus.InRange ? PositionStatusString.PriceIsInRange : (status === PositionStatus.AboveRange ? PositionStatusString.PriceIsAboveRange : PositionStatusString.PriceIsBelowRange),
       sharePercentOfLiquidity,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
       currentSqrtPrice: whirlpoolData.sqrtPrice,
@@ -837,6 +843,215 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
       occupied,
       unoccupied,
       bundledPositions,
+    },
+  };
+}
+
+type PositionDerivedInfoForList = {
+  priceLower: Decimal,
+  priceUpper: Decimal,
+  invertedPriceLower: Decimal,
+  invertedPriceUpper: Decimal,
+  amounts: TokenAmounts,
+  amountA: Decimal,
+  amountB: Decimal,
+  status: PositionStatusString,
+  isBundledPosition: boolean,
+  isFullRange: boolean,
+}
+
+export type PositionInfoForList = {
+  meta: AccountMetaInfo,
+  parsed: PositionData,
+  derived: PositionDerivedInfoForList,
+}
+
+type WhirlpoolDerivedInfoForList = {
+  decimalsA: number,
+  decimalsB: number,
+  decimalsR0?: number,
+  decimalsR1?: number,
+  decimalsR2?: number,
+  tokenInfoA?: TokenInfo,
+  tokenInfoB?: TokenInfo,
+  tokenInfoR0?: TokenInfo,
+  tokenInfoR1?: TokenInfo,
+  tokenInfoR2?: TokenInfo,
+}
+
+type WhirlpoolInfoForList = {
+  meta: AccountMetaInfo,
+  parsed: WhirlpoolData,
+  derived: WhirlpoolDerivedInfoForList,
+}
+
+export type PoolPositions = {
+  whirlpool: WhirlpoolInfoForList,
+  positions: PositionInfoForList[],
+  positionSummary: {
+    numPositions: number,
+    numZeroLiquidityPositions: number,
+    numFullRangePositions: number,
+    numStatusPriceIsInRangePositions: number,
+    numStatusPriceIsAboveRangePositions: number,
+    numStatusPriceIsBelowRangePositions: number,
+  },
+}
+
+export const ORDER_BY_TICK_LOWER_INDEX_ASC = (a: PositionInfoForList, b: PositionInfoForList) => {
+  const cmpLower = a.parsed.tickLowerIndex - b.parsed.tickLowerIndex;
+  if (cmpLower) return cmpLower;
+  const cmpUpper = a.parsed.tickUpperIndex - b.parsed.tickUpperIndex;
+  return cmpUpper;
+}
+
+export const ORDER_BY_TICK_UPPER_INDEX_DESC = (a: PositionInfoForList, b: PositionInfoForList) => {
+  const cmpUpper = b.parsed.tickUpperIndex - a.parsed.tickUpperIndex;
+  if (cmpUpper) return cmpUpper;
+  const cmpLower = b.parsed.tickLowerIndex - a.parsed.tickLowerIndex;
+  return cmpLower;
+}
+
+export const ORDER_BY_TOKEN_A_DESC = (a: PositionInfoForList, b: PositionInfoForList) => {
+  const cmpA = b.derived.amountA.cmp(a.derived.amountA);
+  if (cmpA) return cmpA;
+  const cmpB = b.derived.amountB.cmp(a.derived.amountB);
+  return cmpB;
+}
+
+export const ORDER_BY_TOKEN_B_DESC = (a: PositionInfoForList, b: PositionInfoForList) => {
+  const cmpB = b.derived.amountB.cmp(a.derived.amountB);
+  if (cmpB) return cmpB;
+  const cmpA = b.derived.amountA.cmp(a.derived.amountA);
+  return cmpA;
+}
+
+export async function listPoolPositions(poolAddr: Address): Promise<PoolPositions> {
+  const poolPubkey = AddressUtil.toPubKey(poolAddr);
+  const connection = getConnection();
+  const fetcher = new AccountFetcher(connection);
+
+  // get whirlpool
+  const { accountInfo, slotContext } = await getAccountInfo(connection, poolPubkey);
+  const whirlpoolData = ParsableWhirlpool.parse(accountInfo.data);
+  const programId = accountInfo.owner;
+
+  // get mints
+  const mintPubkeys = [];
+  mintPubkeys.push(whirlpoolData.tokenMintA);
+  mintPubkeys.push(whirlpoolData.tokenMintB);
+  mintPubkeys.push(whirlpoolData.rewardInfos[0].mint);
+  mintPubkeys.push(whirlpoolData.rewardInfos[1].mint);
+  mintPubkeys.push(whirlpoolData.rewardInfos[2].mint);
+  const mints = await fetcher.listMintInfos(mintPubkeys, true);
+  const decimalsA = mints[0].decimals;
+  const decimalsB = mints[1].decimals;
+  const decimalsR0 = mints[2]?.decimals;
+  const decimalsR1 = mints[3]?.decimals;
+  const decimalsR2 = mints[4]?.decimals;
+
+  // get token name
+  const tokenList = await getTokenList();
+  const tokenInfoA = tokenList.getTokenInfoByMint(mintPubkeys[0]);
+  const tokenInfoB = tokenList.getTokenInfoByMint(mintPubkeys[1]);
+  const tokenInfoR0 = tokenList.getTokenInfoByMint(mintPubkeys[2]);
+  const tokenInfoR1 = tokenList.getTokenInfoByMint(mintPubkeys[3]);
+  const tokenInfoR2 = tokenList.getTokenInfoByMint(mintPubkeys[4]);
+
+  const whirlpoolInfoForList: WhirlpoolInfoForList = {
+    meta: toMeta(poolPubkey, accountInfo, slotContext),
+    parsed: whirlpoolData,
+    derived: {
+      decimalsA,
+      decimalsB,
+      decimalsR0,
+      decimalsR1,
+      decimalsR2,
+      tokenInfoA,
+      tokenInfoB,
+      tokenInfoR0,
+      tokenInfoR1,
+      tokenInfoR2,
+    },
+  };
+
+  // get positions
+  const positionFilters: GetProgramAccountsFilter[] = [
+    {dataSize: getAccountSize(AccountName.Position)},
+    {memcmp: {offset: 8, bytes: poolPubkey.toBase58()}},
+  ];
+  const accounts = await connection.getProgramAccounts(programId, {
+    commitment: "confirmed",
+    encoding: "base64",
+    withContext: true,
+    filters: positionFilters,
+  });
+
+  const positionSlotContext = accounts.context.slot;
+  const positions: PositionInfoForList[] = accounts.value.map((a) => {
+    const positionData = ParsablePosition.parse(a.account.data);
+
+    // get status & share
+    const status = PositionUtil.getPositionStatus(whirlpoolData.tickCurrentIndex, positionData.tickLowerIndex, positionData.tickUpperIndex);
+    const priceLower = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB), decimalsB);
+    const priceUpper = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickUpperIndex, decimalsA, decimalsB), decimalsB);
+    const invertedPriceLower = toFixedDecimal(new Decimal(1).div(PriceMath.tickIndexToPrice(positionData.tickUpperIndex, decimalsA, decimalsB)), decimalsA);
+    const invertedPriceUpper = toFixedDecimal(new Decimal(1).div(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB)), decimalsA);
+
+    const amounts = PoolUtil.getTokenAmountsFromLiquidity(
+      positionData.liquidity,
+      whirlpoolData.sqrtPrice,
+      PriceMath.tickIndexToSqrtPriceX64(positionData.tickLowerIndex),
+      PriceMath.tickIndexToSqrtPriceX64(positionData.tickUpperIndex),
+      false,
+    );
+
+    // check if bundled position
+    const derivedPositionAddress = PDAUtil.getPosition(accountInfo.owner, positionData.positionMint).publicKey;
+    const isBundledPosition = !derivedPositionAddress.equals(poolPubkey);
+
+    // check if full range
+    const minTickIndex = Math.ceil(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+    const maxTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+    const isFullRange = positionData.tickLowerIndex === minTickIndex && positionData.tickUpperIndex === maxTickIndex;
+
+    return {
+      meta: toMeta(a.pubkey, a.account, positionSlotContext),
+      parsed: positionData,
+      derived: {
+        priceLower,
+        priceUpper,
+        invertedPriceLower,
+        invertedPriceUpper,
+        amounts,
+        amountA: DecimalUtil.fromU64(amounts.tokenA, decimalsA),
+        amountB: DecimalUtil.fromU64(amounts.tokenB, decimalsB),
+        status: status === PositionStatus.InRange ? PositionStatusString.PriceIsInRange : (status === PositionStatus.AboveRange ? PositionStatusString.PriceIsAboveRange : PositionStatusString.PriceIsBelowRange),
+        isBundledPosition,
+        isFullRange,
+      }
+    };
+  });
+
+  positions.sort(ORDER_BY_TICK_LOWER_INDEX_ASC);
+
+  const numPositions = positions.length;
+  const numZeroLiquidityPositions = positions.filter((p) => p.parsed.liquidity.isZero()).length;
+  const numFullRangePositions = positions.filter((p) => p.derived.isFullRange).length;
+  const numStatusPriceIsInRangePositions = positions.filter((p) => p.derived.status === PositionStatusString.PriceIsInRange).length;
+  const numStatusPriceIsAboveRangePositions = positions.filter((p) => p.derived.status === PositionStatusString.PriceIsAboveRange).length;
+  const numStatusPriceIsBelowRangePositions = positions.filter((p) => p.derived.status === PositionStatusString.PriceIsBelowRange).length;
+
+  return {
+    whirlpool: whirlpoolInfoForList,
+    positions,
+    positionSummary: {
+      numPositions,
+      numZeroLiquidityPositions,
+      numFullRangePositions,
+      numStatusPriceIsInRangePositions,
+      numStatusPriceIsAboveRangePositions,
+      numStatusPriceIsBelowRangePositions,
     },
   };
 }
