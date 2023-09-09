@@ -273,6 +273,7 @@ type PositionDerivedInfo = {
   lowerTickArray: PublicKey,
   upperTickArray: PublicKey,
   isBundledPosition: boolean,
+  isFullRange: boolean,
   positionBundle?: PublicKey,
 }
 
@@ -362,6 +363,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const derivedPositionBundleAddress = PDAUtil.getPositionBundle(accountInfo.owner, positionData.positionMint).publicKey;
   const isBundledPosition = !derivedPositionAddress.equals(pubkey);
 
+  // check if full range
+  const minTickIndex = Math.ceil(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const maxTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const isFullRange = positionData.tickLowerIndex === minTickIndex && positionData.tickUpperIndex === maxTickIndex;
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: positionData,
@@ -405,6 +411,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       lowerTickArray: tickArrayPubkeys[0],
       upperTickArray: tickArrayPubkeys[1],
       isBundledPosition,
+      isFullRange,
       positionBundle: isBundledPosition ? derivedPositionBundleAddress : undefined,
     }
   };

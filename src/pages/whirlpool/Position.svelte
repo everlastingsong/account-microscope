@@ -66,6 +66,7 @@
       <Pubkey type="whirlpool/positionbundle" address={positionInfo.derived.positionBundle} />
     </Data>
   {/if}
+  <Data name="is full range">{positionInfo.derived.isFullRange}</Data>
   <Data name="lower price">{positionInfo.derived.priceLower} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>
   <Data name="upper price">{positionInfo.derived.priceUpper} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>
   <Data name="inverted lower price">{positionInfo.derived.invertedPriceLower} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoB, positionInfo.derived.tokenInfoA)}</Data>
