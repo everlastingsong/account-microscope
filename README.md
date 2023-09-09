@@ -49,6 +49,11 @@ It is easy to reproduce and test mainnet pools such as SOL/USDC in LocalValidato
 
 <img width="1662" alt="screenshot 2023-08-15 9 19 50" src="https://github.com/everlastingsong/account-microscope/assets/109891005/3948f552-f403-42a3-84d8-3a10716e7a50">
 
+### Listing Whirlpool Positions
+You can list all positions for a specific whirlpool.
+
+<img width="1691" alt="screenshot 2023-09-09 16 18 08" src="https://github.com/everlastingsong/account-microscope/assets/109891005/7cd38c4a-1cca-40ee-be8a-88e761475a6c">
+
 ### It makes you a millionaire in LocalValidator
 You can download TokenProgram related accounts to mint an arbitrary amount of tokens of your choice in LocalValidator.
 
