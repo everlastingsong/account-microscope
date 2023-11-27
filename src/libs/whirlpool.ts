@@ -12,7 +12,7 @@ import Decimal from "decimal.js";
 import moment from "moment";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 7
-const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
@@ -29,6 +29,12 @@ type NeighboringTickArray = {
   startPrice: Decimal,
   isInitialized: boolean,
   hasTickCurrentIndex: boolean,
+}
+
+type FullRangeTickArray = {
+  pubkey: PublicKey,
+  startTickIndex: number,
+  isInitialized: boolean,
 }
 
 type IsotopeWhirlpool = {
@@ -64,6 +70,7 @@ type WhirlpoolDerivedInfo = {
   reward1WeeklyEmission?: Decimal,
   reward2WeeklyEmission?: Decimal,
   rewardLastUpdatedTimestamp: moment.Moment,
+  fullRangeTickArrays: FullRangeTickArray[],
   neighboringTickArrays: NeighboringTickArray[],
   isotopeWhirlpools: IsotopeWhirlpool[],
   oracle: PublicKey,
@@ -138,7 +145,21 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       isInitialized: !!tickArrays[i],
       hasTickCurrentIndex: startTickIndex === currentStartTickIndex,
     });
-  })
+  });
+
+  // get full range tickarrays
+  const minStartTickIndex = Math.floor(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const maxStartTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const minTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, minStartTickIndex).publicKey;
+  const maxTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, maxStartTickIndex).publicKey;
+  const tickArraysForFullRange = await fetcher.listTickArrays([
+    minTickArrayPubkey,
+    maxTickArrayPubkey,
+  ], true);
+  const fullRangeTickArrays: FullRangeTickArray[] = [
+    {pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0]},
+    {pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1]},
+  ];
 
   // get isotope whirlpools
   const whirlpoolPubkeys = [];
@@ -224,6 +245,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromU64(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
       reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromU64(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),
       rewardLastUpdatedTimestamp: moment.unix(whirlpoolData.rewardLastUpdatedTimestamp.toNumber()),
+      fullRangeTickArrays,
       neighboringTickArrays,
       isotopeWhirlpools,
       oracle,

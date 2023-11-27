@@ -15,14 +15,16 @@
     return list.filter(
       (p) => filter.length == 0 ||
       p.name.toUpperCase().indexOf(filter.toUpperCase()) >= 0 ||
-      p.invertedName.toUpperCase().indexOf(filter.toUpperCase()) >= 0
+      p.invertedName.toUpperCase().indexOf(filter.toUpperCase()) >= 0 ||
+      p.mintA.toBase58().indexOf(filter) >= 0 ||
+      p.mintB.toBase58().indexOf(filter) >= 0
     );
   }
 </script>
 
 <h2>🌀Whirlpool::list</h2>
 <form on:submit|preventDefault={onSubmit} style="margin-bottom: 1em;">
-  <input style="margin: 0.5em 0em;" bind:value={filter} type="text" size="64" placeholder="SOL/USDC" />
+  <input style="margin: 0.5em 0em;" bind:value={filter} type="text" size="64" placeholder="SOL/USDC or orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE" />
   <input type="submit" value="Set Filter!" />
 </form>
 

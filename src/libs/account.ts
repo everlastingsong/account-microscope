@@ -68,3 +68,11 @@ export function toAccountJSON(meta: AccountMetaInfo, embedSlotContext: boolean):
     ...slotContext,
   };
 }
+
+export function getMinimumBalanceForRentExemption(dataLength: number): number {
+  // https://docs.rs/solana-program/latest/src/solana_program/rent.rs.html#73-77
+  const ACCOUNT_STORAGE_OVERHEAD = 128;
+  const LAMPORTS_PER_BYTE_YEAR = 3480; // 3480 lampores per byte per year
+  const EXEMPTION_THRESHOLD = 2; // 2 years
+  return (ACCOUNT_STORAGE_OVERHEAD + dataLength) * LAMPORTS_PER_BYTE_YEAR * EXEMPTION_THRESHOLD;
+}

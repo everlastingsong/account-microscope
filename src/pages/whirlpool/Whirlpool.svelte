@@ -125,6 +125,20 @@
   </Data>
   <Data name="reward last updated timestamp">{whirlpoolInfo.derived.rewardLastUpdatedTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
   <Data name="oracle"><Pubkey address={whirlpoolInfo.derived.oracle} /></Data>
+  <Data name="tick arrays for full range">
+    <table style="border-spacing: 0;">
+    <thead><th>initialized</th><th>start tick</th><th>pubkey</th></thead>
+    <tbody>
+      {#each whirlpoolInfo.derived.fullRangeTickArrays as tickArray}
+      <tr class="{tickArray.isInitialized ? "initialized" : "uninitialized"}">
+        <td>{tickArray.isInitialized}</td>
+        <td>{tickArray.startTickIndex}</td>
+        <td><Pubkey type="whirlpool/tickarray" address={tickArray.pubkey} short/></td>
+      </tr>
+      {/each}
+      </tbody>
+    </table>
+  </Data>
   <Data name="neighboring tick arrays">
     <table style="border-spacing: 0;">
     <thead><th>current</th><th>initialized</th><th>start tick</th><th>start price</th><th>pubkey</th></thead>
