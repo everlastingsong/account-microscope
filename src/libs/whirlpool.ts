@@ -11,7 +11,7 @@ import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
 
-const NEIGHBORING_TICK_ARRAY_NUM = 7
+const NEIGHBORING_TICK_ARRAY_NUM = 9
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
 
 export const ACCOUNT_DEFINITION = {
@@ -148,8 +148,10 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   });
 
   // get full range tickarrays
-  const minStartTickIndex = Math.floor(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
-  const maxStartTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const minTickIndex = Math.floor(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const maxTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const minStartTickIndex = TickUtil.getStartTickIndex(minTickIndex, whirlpoolData.tickSpacing);
+  const maxStartTickIndex = TickUtil.getStartTickIndex(maxTickIndex, whirlpoolData.tickSpacing);
   const minTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, minStartTickIndex).publicKey;
   const maxTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, maxStartTickIndex).publicKey;
   const tickArraysForFullRange = await fetcher.listTickArrays([

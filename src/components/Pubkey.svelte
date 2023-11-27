@@ -83,6 +83,7 @@
   {#if address}
   <a target="_blank" rel="noreferrer" href={getSolscanURL(address)}>🔍</a>
   <a target="_blank" rel="noreferrer" href={getSolanaFmURL(address)}>📻</a>
+  <a href="#/generic/{address}">🪣</a>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <span bind:this={clipboard} on:click={copy}>📎</span>
   {/if}
