@@ -163,7 +163,7 @@
     error detected 😵
     {:else}
     <table style="border-spacing: 0;">
-      <thead><th>pubkey</th><th>start price</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th></thead>
+      <thead><th>start price</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th><th>pubkey</th></thead>
       <tbody>
       <tr><td colspan="4">B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)} to A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)} direction (price up)</td></tr>
       {#each whirlpoolInfo.derived.tickArrayTradableAmounts.upward.reverse() as tradableAmount}
