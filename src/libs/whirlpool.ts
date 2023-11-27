@@ -148,7 +148,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   });
 
   // get full range tickarrays
-  const minTickIndex = Math.floor(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
+  const minTickIndex = Math.ceil(MIN_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
   const maxTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
   const minStartTickIndex = TickUtil.getStartTickIndex(minTickIndex, whirlpoolData.tickSpacing);
   const maxStartTickIndex = TickUtil.getStartTickIndex(maxTickIndex, whirlpoolData.tickSpacing);
