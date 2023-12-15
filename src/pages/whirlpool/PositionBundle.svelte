@@ -60,6 +60,7 @@
       </tbody>
     </table>
   </Data>
+  <Data name="position bundle mint supply">{positionBundleInfo.derived.positionBundleMintSupply}{positionBundleInfo.derived.positionBundleMintSupply === 0 ? " (burnt)" : ""}</Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}

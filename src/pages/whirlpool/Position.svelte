@@ -88,6 +88,7 @@
   <Data name="pool liquidity">{positionInfo.derived.poolLiquidity}</Data>
   <Data name="current tick index">{positionInfo.derived.tickCurrentIndex}</Data>
   <Data name="current price">{positionInfo.derived.currentPrice}</Data>
+  <Data name="position mint supply">{positionInfo.derived.positionMintSupply}{positionInfo.derived.positionMintSupply === 0 ? " (burnt)" : ""}</Data>
   <Data name="position status">{positionInfo.derived.status}</Data>
   <Data name="share of liquidity">{positionInfo.derived.sharePercentOfLiquidity} %</Data>
   <Data name="lower tick array"><Pubkey type="whirlpool/tickarray" address={positionInfo.derived.lowerTickArray} /></Data>

@@ -305,6 +305,7 @@ type PositionDerivedInfo = {
   isBundledPosition: boolean,
   isFullRange: boolean,
   positionBundle?: PublicKey,
+  positionMintSupply: number,
 }
 
 export type PositionInfo = {
@@ -338,12 +339,14 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   mintPubkeys.push(whirlpoolData.rewardInfos[0].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[1].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[2].mint);
+  mintPubkeys.push(positionData.positionMint);
   const mints = await fetcher.listMintInfos(mintPubkeys, true);
   const decimalsA = mints[0].decimals;
   const decimalsB = mints[1].decimals;
   const decimalsR0 = mints[2]?.decimals;
   const decimalsR1 = mints[3]?.decimals;
   const decimalsR2 = mints[4]?.decimals;
+  const positionMintSupply = mints[5].supply.toNumber();
 
   const priceLower = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB), decimalsB);
   const priceUpper = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickUpperIndex, decimalsA, decimalsB), decimalsB);
@@ -443,6 +446,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       isBundledPosition,
       isFullRange,
       positionBundle: isBundledPosition ? derivedPositionBundleAddress : undefined,
+      positionMintSupply,
     }
   };
 }
@@ -818,6 +822,7 @@ type PositionBundleDerivedInfo = {
   occupied: number;
   unoccupied: number;
   bundledPositions: BundledPositionInfo[],
+  positionBundleMintSupply: number;
 }
 
 type PositionBundleInfo = {
@@ -833,6 +838,9 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const positionBundleData = ParsablePositionBundle.parse(accountInfo.data);
+
+  const positionBundleMint = await fetcher.getMintInfo(positionBundleData.positionBundleMint, true);
+  const positionBundleMintSupply = positionBundleMint.supply.toNumber();
 
   const occupiedIndexes = PositionBundleUtil.getOccupiedBundleIndexes(positionBundleData);
   const bundledPositionAddresses = occupiedIndexes.map((index) => {
@@ -867,6 +875,7 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
       occupied,
       unoccupied,
       bundledPositions,
+      positionBundleMintSupply,
     },
   };
 }
