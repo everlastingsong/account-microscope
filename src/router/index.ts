@@ -14,6 +14,9 @@ import TokenMint from "../pages/token/Mint.svelte";
 import TokenAccountList from "../pages/token/List.svelte";
 import AssociatedTokenAccount from "../pages/token/AssociatedTokenAccount.svelte";
 
+import TokenAccount2022 from "../pages/token2022/Account.svelte";
+import TokenMint2022 from "../pages/token2022/Mint.svelte";
+
 import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
 import TokenSwapList from "../pages/tokenswap/List.svelte";
 
@@ -39,6 +42,9 @@ export const routes = {
   '/token/mint/:pubkey': TokenMint,
   '/token/listTokenAccounts/:pubkey?': TokenAccountList,
   '/token/deriveAta': AssociatedTokenAccount,
+
+  '/token2022/account/:pubkey': TokenAccount2022,
+  '/token2022/mint/:pubkey': TokenMint2022,
 
   '/tokenswap/list': TokenSwapList,
   '/tokenswap/swapstate/:pubkey': TokenSwap,

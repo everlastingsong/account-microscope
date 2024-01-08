@@ -4,6 +4,7 @@ import { Address } from "@coral-xyz/anchor";
 import { ORCA_WHIRLPOOL_PROGRAM_ID } from "@orca-so/whirlpools-sdk";
 import { AddressUtil } from "@orca-so/common-sdk";
 import { getConnection } from "./client";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const ORCA_TOKEN_SWAP_V1_ID = new PublicKey("DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1");
 const ORCA_TOKEN_SWAP_V2_ID = new PublicKey("9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP");
@@ -35,6 +36,23 @@ export async function resolveAccountType(addr: Address): Promise<ResolvedAccount
     switch (accountInfo.data.length) {
       case 165: return { pubkey, path: "/token/account" };
       case 82: return { pubkey, path: "/token/mint" };
+    }
+  }
+
+  if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+    switch (accountInfo.data.length) {
+      case 165: return { pubkey, path: "/token2022/account" };
+      case 82: return { pubkey, path: "/token2022/mint" };
+      default:
+        // https://github.com/solana-labs/solana-program-library/blob/master/token/js/src/extensions/accountType.ts
+        if (accountInfo.data.length >= 166) {
+          if (accountInfo.data[165] === 1) {
+            return { pubkey, path: "/token2022/mint" };
+          }
+          if (accountInfo.data[165] === 2) {
+            return { pubkey, path: "/token2022/account" };
+          }
+        }
     }
   }
 
