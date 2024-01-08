@@ -28,10 +28,13 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.78.4",
+    "@solana/spl-token": "^0.3.8",
+    "@orca-so/whirlpools-sdk": "^0.11.8",
+    "@orca-so/common-sdk": "^0.3.5",
+    "@coral-xyz/anchor": "^0.27.0",
     "@orca-so/aquafarm": "^0.0.12",
     "@orca-so/stablecurve": "^1.0.6",
-    "@orca-so/whirlpools-sdk": "^0.10.0",
-    "@solana/web3.js": "^1.78.4",
     "@rollup/plugin-json": "^5.0.1",
     "assert": "^2.0.0",
     "jszip": "^3.10.1",
@@ -44,10 +47,7 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "sirv-cli": "^2.0.0",
     "stream-browserify": "^3.0.0",
-    "svelte-navigator": "^3.2.2"
-  },
-  "resolutions": {
-    "@solana/web3.js": "^1.78.4",
-    "@solana/spl-token": "^0.1.8"
+    "svelte-navigator": "^3.2.2",
+    "crypto-browserify": "^3.12.0"
   }
 }

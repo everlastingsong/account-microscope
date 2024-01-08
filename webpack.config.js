@@ -19,6 +19,7 @@ module.exports = {
 		mainFields: ['svelte', 'browser', 'module', 'main'],
     fallback: {
       "stream": require.resolve("stream-browserify"),
+			"crypto": require.resolve("crypto-browserify"),
       "buffer": require.resolve("buffer"),
       "assert": require.resolve("assert")
     }

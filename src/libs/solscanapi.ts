@@ -1,15 +1,15 @@
 import { PublicKey } from "@solana/web3.js";
 import fetch from "node-fetch";
-import { u64 } from "@solana/spl-token";
 import { DecimalUtil } from "@orca-so/common-sdk";
 import Decimal from "decimal.js";
+import BN from "bn.js";
 
 const TOKEN_HOLDERS = "https://public-api.solscan.io/token/holders?limit=10&offset=0&tokenAddress=";
 
 export type TokenHolderEntry = {
   rank: number,
   address: PublicKey,
-  amount: u64,
+  amount: BN,
   decimalAmount: Decimal,
   decimals: number,
   owner: PublicKey,
@@ -22,9 +22,9 @@ export async function getTokenHolders(mint: PublicKey): Promise<TokenHolderEntry
 
     const list: TokenHolderEntry[] = [];
     response.data.forEach((data) => {
-      const amount = new u64(data.amount);
+      const amount = new BN(data.amount);
       const decimals = Number.parseInt(data.decimals);
-      const decimalAmount = DecimalUtil.fromU64(amount, decimals);
+      const decimalAmount = DecimalUtil.fromBN(amount, decimals);
     
       list.push({
         rank: Number.parseInt(data.rank),

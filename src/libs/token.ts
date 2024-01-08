@@ -1,13 +1,14 @@
-import { AccountFetcher, ORCA_WHIRLPOOL_PROGRAM_ID, ParsableMintInfo, ParsableTokenInfo, PDAUtil } from "@orca-so/whirlpools-sdk";
+import { buildDefaultAccountFetcher, IGNORE_CACHE, ORCA_WHIRLPOOL_PROGRAM_ID, PDAUtil } from "@orca-so/whirlpools-sdk";
 import { Address, utils } from "@coral-xyz/anchor";
-import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
+import { AddressUtil, DecimalUtil, ParsableMintInfo, ParsableTokenAccountInfo } from "@orca-so/common-sdk";
 import { PublicKey, ParsedAccountData } from "@solana/web3.js";
-import { u64, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { MintInfo as SplMintInfo, AccountInfo as SplAccountInfo } from "@solana/spl-token";
 import { AccountMetaInfo, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getTokenHolders, TokenHolderEntry } from "./solscanapi";
 import Decimal from "decimal.js";
+import BN from "bn.js";
 
 export const ACCOUNT_DEFINITION = {
   Mint: "https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/state.rs#L16",
@@ -43,13 +44,13 @@ export type MintInfo = {
 export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const splTokenAccountInfo = ParsableTokenInfo.parse(accountInfo.data);
+  const splTokenAccountInfo = ParsableTokenAccountInfo.parse(pubkey, accountInfo);
 
   // get mint
-  const mint = await fetcher.getMintInfo(splTokenAccountInfo.mint, true);
+  const mint = await fetcher.getMintInfo(splTokenAccountInfo.mint, IGNORE_CACHE);
 
   // isATA ?
   const ataAddress = await utils.token.associatedAddress({ mint: splTokenAccountInfo.mint, owner: splTokenAccountInfo.owner });
@@ -60,7 +61,7 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
     parsed: splTokenAccountInfo,
     derived: {
       decimals: mint.decimals,
-      amount: DecimalUtil.fromU64(splTokenAccountInfo.amount, mint.decimals),
+      amount: DecimalUtil.fromBN(splTokenAccountInfo.amount, mint.decimals),
       isATA,
     }
   };
@@ -69,21 +70,21 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
 export async function getMintInfo(addr: Address): Promise<MintInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const splMintInfo = ParsableMintInfo.parse(accountInfo.data);
+  const splMintInfo = ParsableMintInfo.parse(pubkey, accountInfo);
 
   // metaplex metadata
   const metadata = PDAUtil.getPositionMetadata(pubkey).publicKey;
 
   // check if whirlpool position mint
   const positionPubkey = PDAUtil.getPosition(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
-  const position = await fetcher.getPosition(positionPubkey, true);
+  const position = await fetcher.getPosition(positionPubkey, IGNORE_CACHE);
 
   // check if whirlpool position bundle mint
   const positionBundlePubkey = PDAUtil.getPositionBundle(ORCA_WHIRLPOOL_PROGRAM_ID /* cannot consider other deployment */, pubkey).publicKey;
-  const positionBundle = await fetcher.getPositionBundle(positionBundlePubkey, true);
+  const positionBundle = await fetcher.getPositionBundle(positionBundlePubkey, IGNORE_CACHE);
 
   // top 10 holders
   const largestHolders = await getTokenHolders(pubkey);
@@ -92,7 +93,7 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: splMintInfo,
     derived: {
-      supply: DecimalUtil.fromU64(splMintInfo.supply, splMintInfo.decimals),
+      supply: DecimalUtil.fromBN(splMintInfo.supply, splMintInfo.decimals),
       metadata,
       largestHolders,
       whirlpoolPosition: position === null ? undefined : positionPubkey,
@@ -105,7 +106,7 @@ export type TokenAccountListEntry = {
   address: PublicKey,
   mint: PublicKey,
   decimals: number,
-  amount: u64,
+  amount: BN,
   uiAmount: Decimal,
   isATA: boolean,
   extension: {
@@ -137,8 +138,8 @@ export async function listTokenAccounts(wallet: Address): Promise<TokenAccountLi
       const mint = new PublicKey(accountInfo.mint);
       const decimals = accountInfo.tokenAmount.decimals;
 
-      const amount = new u64(accountInfo.tokenAmount.amount);
-      const uiAmount = DecimalUtil.fromU64(amount, decimals);
+      const amount = new BN(accountInfo.tokenAmount.amount);
+      const uiAmount = DecimalUtil.fromBN(amount, decimals);
 
       const isATA = (await utils.token.associatedAddress({
         mint: mint,
@@ -167,7 +168,7 @@ export async function listTokenAccounts(wallet: Address): Promise<TokenAccountLi
 
 async function dispatchWhirlpoolExtension(tokenAccountList: TokenAccountList) {
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const candidates: { index: number; position: PublicKey; bundle: PublicKey }[] = [];
   tokenAccountList.forEach((ta, i) => {
@@ -189,18 +190,18 @@ async function dispatchWhirlpoolExtension(tokenAccountList: TokenAccountList) {
 
   if (candidates.length === 0) return;
 
-  const whirlpoolPositions = await fetcher.listPositions(
+  const whirlpoolPositions = await fetcher.getPositions(
     candidates.map((c) => c.position),
-    true
+    IGNORE_CACHE
   );
 
-  const whirlpoolPositionBundles = await fetcher.listPositionBundles(
+  const whirlpoolPositionBundles = await fetcher.getPositionBundles(
     candidates.map((c) => c.bundle),
-    true
+    IGNORE_CACHE
   );
 
-  candidates.forEach((c, i) => {
-    if (whirlpoolPositions[i] !== null) {
+  candidates.forEach((c) => {
+    if (whirlpoolPositions.get(c.position.toBase58())) {
       const current = tokenAccountList[c.index].extension;
       tokenAccountList[c.index].extension = {
         ...current,
@@ -210,7 +211,7 @@ async function dispatchWhirlpoolExtension(tokenAccountList: TokenAccountList) {
       };
     }
 
-    if (whirlpoolPositionBundles[i] !== null) {
+    if (whirlpoolPositionBundles.get(c.bundle.toBase58())) {
       const current = tokenAccountList[c.index].extension;
       tokenAccountList[c.index].extension = {
         ...current,

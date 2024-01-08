@@ -1,15 +1,15 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { AccountFetcher } from "@orca-so/whirlpools-sdk";
+import { IGNORE_CACHE, WhirlpoolAccountFetcher, buildDefaultAccountFetcher } from "@orca-so/whirlpools-sdk";
 import { Aquafarm, GlobalFarm, UserFarm } from "@orca-so/aquafarm";
 import { getAuthorityAndNonce } from "@orca-so/aquafarm/dist/models/GlobalFarm";
 import { decodeGlobalFarmBuffer, decodeUserFarmBuffer } from "@orca-so/aquafarm/dist/utils/layout";
 import { Address } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getPoolConfigs } from "./orcaapi";
 import Decimal from "decimal.js";
+import BN from "bn.js";
 import moment from "moment";
 
 export const ACCOUNT_DEFINITION = {
@@ -35,7 +35,7 @@ type UserFarmParsedInfo = {
   accountType: number,
   globalFarm: PublicKey,
   owner: PublicKey,
-  baseTokensConverted: u64,
+  baseTokensConverted: BN,
   cumulativeEmissionsCheckpoint: Decimal,
 }
 
@@ -75,9 +75,9 @@ type GlobalFarmParsedInfo = {
   baseTokenVault: PublicKey,
   rewardTokenVault: PublicKey,
   farmTokenMint: PublicKey,
-  emissionsPerSecondNumerator: u64,
-  emissionsPerSecondDenominator: u64,
-  lastUpdatedTimestamp: u64,
+  emissionsPerSecondNumerator: BN,
+  emissionsPerSecondDenominator: BN,
+  lastUpdatedTimestamp: BN,
   cumulativeEmissionsPerFarmToken: Decimal,
 }
 
@@ -90,23 +90,23 @@ type GlobalFarmInfo = {
 export async function getGlobalFarmInfo(addr: Address): Promise<GlobalFarmInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const globalFarmInfo = decodeGlobalFarmBuffer(accountInfo);
 
   // get accounts
-  const accounts = await fetcher.listTokenInfos([globalFarmInfo.baseTokenVault, globalFarmInfo.rewardTokenVault], true);
+  const accounts = Array.from((await fetcher.getTokenInfos([globalFarmInfo.baseTokenVault, globalFarmInfo.rewardTokenVault], IGNORE_CACHE)).values());
   const rewardMint = accounts[1].mint;
 
   // get mints
-  const mints = await fetcher.listMintInfos([globalFarmInfo.baseTokenMint, globalFarmInfo.farmTokenMint, rewardMint], true);
+  const mints = Array.from((await fetcher.getMintInfos([globalFarmInfo.baseTokenMint, globalFarmInfo.farmTokenMint, rewardMint], IGNORE_CACHE)).values());
   const decimalsBase = mints[0].decimals;
   const decimalsFarm = mints[1].decimals;
   const decimalsReward = mints[2].decimals;
-  const supplyBase = DecimalUtil.fromU64(mints[0].supply, decimalsBase);
-  const supplyFarm = DecimalUtil.fromU64(mints[1].supply, decimalsFarm);
-  const rewardVaultAmount = DecimalUtil.fromU64(accounts[1].amount, decimalsReward);
+  const supplyBase = DecimalUtil.fromBN(mints[0].supply, decimalsBase);
+  const supplyFarm = DecimalUtil.fromBN(mints[1].supply, decimalsFarm);
+  const rewardVaultAmount = DecimalUtil.fromBN(accounts[1].amount, decimalsReward);
 
   // get authority
   const authority = (await getAuthorityAndNonce(pubkey, accountInfo.owner))[0];
@@ -180,7 +180,7 @@ export async function getUserFarmInfo(addr: Address): Promise<UserFarmInfo> {
   const decimalsReward = globalFarmInfo.derived.decimalsReward;
 
   // get amount
-  const baseTokensConverted = DecimalUtil.fromU64(userFarmInfo.baseTokensConverted, globalFarmInfo.derived.decimalsBase);
+  const baseTokensConverted = DecimalUtil.fromBN(userFarmInfo.baseTokensConverted, globalFarmInfo.derived.decimalsBase);
 
   // get harvestable amount
   const [currentHarvestableAmountU64, harvestableAmountU64] = getHarvestableAmount(
@@ -191,11 +191,11 @@ export async function getUserFarmInfo(addr: Address): Promise<UserFarmInfo> {
 
   let currentHarvestableAmount = undefined;
   if (currentHarvestableAmountU64 !== undefined) {
-    currentHarvestableAmount = DecimalUtil.fromU64(currentHarvestableAmountU64, decimalsReward);
+    currentHarvestableAmount = DecimalUtil.fromBN(currentHarvestableAmountU64, decimalsReward);
   }
   let harvestableAmount = undefined;
   if (harvestableAmountU64 !== undefined) {
-    harvestableAmount = DecimalUtil.fromU64(harvestableAmountU64, decimalsReward);
+    harvestableAmount = DecimalUtil.fromBN(harvestableAmountU64, decimalsReward);
   }
 
   // get share & weely reward
@@ -223,13 +223,13 @@ export async function getUserFarmInfo(addr: Address): Promise<UserFarmInfo> {
   };
 }
 
-function getHarvestableAmount(userPubkey: PublicKey, global: GlobalFarmInfo, user: UserFarmParsedInfo): [u64|undefined, u64|undefined] {
+function getHarvestableAmount(userPubkey: PublicKey, global: GlobalFarmInfo, user: UserFarmParsedInfo): [BN|undefined, BN|undefined] {
   const aquafarm = new Aquafarm(
     new GlobalFarm({...global.parsed, publicKey: global.meta.pubkey, authority: global.derived.authority}),
     global.meta.owner,
     new UserFarm({...user, publicKey: userPubkey})
   );
-  const farmSupplyU64 = DecimalUtil.toU64(global.derived.supplyFarm, global.derived.decimalsFarm);
+  const farmSupplyU64 = DecimalUtil.toBN(global.derived.supplyFarm, global.derived.decimalsFarm);
   return [
     aquafarm.getCurrentHarvestableAmount(farmSupplyU64),
     aquafarm.getHarvestableAmount(),

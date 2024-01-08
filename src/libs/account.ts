@@ -1,7 +1,6 @@
 import { Connection, PublicKey, AccountInfo } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { DecimalUtil } from "@orca-so/common-sdk";
-import { u64 } from "@solana/spl-token";
 import Decimal from "decimal.js";
 
 
@@ -35,8 +34,8 @@ export function toFixedDecimal(n: Decimal, fixed: number): Decimal {
   return new Decimal(n.toFixed(fixed));
 }
 
-export function bn2u64(n: BN): u64 {
-  return DecimalUtil.toU64(new Decimal(n.toString()), 0);
+export function bn2u64(n: BN): BN {
+  return DecimalUtil.toBN(new Decimal(n.toString()), 0);
 }
 
 export function toBase64(buf: Buffer): string {

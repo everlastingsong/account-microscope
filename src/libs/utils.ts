@@ -9,11 +9,11 @@ export function lamports2sol(lamports: number): Decimal {
 }
 
 export function u64ToDecimal(u64Amount: BN, decimals: number): Decimal {
-  return DecimalUtil.fromU64(u64Amount, decimals);
+  return DecimalUtil.fromBN(u64Amount, decimals);
 }
 
 export function decimalToU64(decimalAmount: Decimal, decimals: number): BN {
-  return DecimalUtil.toU64(decimalAmount, decimals);
+  return DecimalUtil.toBN(decimalAmount, decimals);
 }
 
 export function getShortAddressNotation(address: Address, prefixSuffixLength: number = 5): string {

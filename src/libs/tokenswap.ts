@@ -1,9 +1,8 @@
 import { PublicKey, AccountInfo } from "@solana/web3.js";
-import { AccountFetcher } from "@orca-so/whirlpools-sdk";
+import { IGNORE_CACHE, buildDefaultAccountFetcher } from "@orca-so/whirlpools-sdk";
 import { Address, BN } from "@coral-xyz/anchor";
 import { AddressUtil, DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { computeOutputAmount } from "@orca-so/stablecurve";
-import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getPoolConfigs } from "./orcaapi";
 import { getConnection } from "./client";
@@ -114,17 +113,17 @@ type TokenSwapInfo = {
 export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const tokenSwapAccountInfo = parseTokenSwapAccount(accountInfo.data);
 
   // get mints
-  const mints = await fetcher.listMintInfos([
+  const mints = Array.from((await fetcher.getMintInfos([
     tokenSwapAccountInfo.mintA,
     tokenSwapAccountInfo.mintB,
     tokenSwapAccountInfo.poolMint,
-  ], true);
+  ], IGNORE_CACHE)).values());
 
   // get token name
   const tokenList = await getTokenList();
@@ -132,15 +131,15 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
   const tokenInfoB = tokenList.getTokenInfoByMint(tokenSwapAccountInfo.mintB);
 
   // get accounts
-  const accounts = await fetcher.listTokenInfos([
+  const accounts = Array.from((await fetcher.getTokenInfos([
     tokenSwapAccountInfo.vaultA,
     tokenSwapAccountInfo.vaultB,
     tokenSwapAccountInfo.poolFeeAccount,
-  ], true);
+  ], IGNORE_CACHE)).values());
 
   // get price
-  const amountA = DecimalUtil.fromU64(accounts[0].amount, mints[0].decimals);
-  const amountB = DecimalUtil.fromU64(accounts[1].amount, mints[1].decimals);
+  const amountA = DecimalUtil.fromBN(accounts[0].amount, mints[0].decimals);
+  const amountB = DecimalUtil.fromBN(accounts[1].amount, mints[1].decimals);
   const decimalsA = mints[0].decimals;
   const decimalsB = mints[1].decimals;
   let price = new Decimal(0);
@@ -148,11 +147,11 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
     price = toFixedDecimal(amountB.div(amountA), decimalsB);
   }
   if (tokenSwapAccountInfo.curveType === "Stable") {
-    price = DecimalUtil.fromU64(computeOutputAmount(
-      new u64(1 * 10**decimalsA),
+    price = DecimalUtil.fromBN(computeOutputAmount(
+      new BN(1 * 10**decimalsA),
       accounts[0].amount,
       accounts[1].amount,
-      new u64(tokenSwapAccountInfo.amp),
+      new BN(tokenSwapAccountInfo.amp),
     ), decimalsB);
   }
 
@@ -178,10 +177,10 @@ export async function getTokenSwapInfo(addr: Address): Promise<TokenSwapInfo> {
       decimalsLP: mints[2].decimals,
       tokenInfoA,
       tokenInfoB,
-      supplyLP: DecimalUtil.fromU64(mints[2].supply, mints[2].decimals),
-      tokenVaultAAmount: DecimalUtil.fromU64(accounts[0].amount, mints[0].decimals),
-      tokenVaultBAmount: DecimalUtil.fromU64(accounts[1].amount, mints[1].decimals),
-      poolFeeAccountAmount: DecimalUtil.fromU64(accounts[2]?.amount ?? new u64(0), mints[2].decimals), // feeAccount not found
+      supplyLP: DecimalUtil.fromBN(mints[2].supply, mints[2].decimals),
+      tokenVaultAAmount: DecimalUtil.fromBN(accounts[0].amount, mints[0].decimals),
+      tokenVaultBAmount: DecimalUtil.fromBN(accounts[1].amount, mints[1].decimals),
+      poolFeeAccountAmount: DecimalUtil.fromBN(accounts[2]?.amount ?? new BN(0), mints[2].decimals), // feeAccount not found
       feeRate: feeRate.toDecimal().mul(100),
       price,
       aquaFarm,

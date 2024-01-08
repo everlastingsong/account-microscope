@@ -78,8 +78,8 @@
     return {
       price: price.toFixed(decimalsB),
       invertedPrice: invertedPrice.toFixed(decimalsA),
-      withdrawableA: DecimalUtil.fromU64(amount.tokenA, decimalsA).toString(),
-      withdrawableB: DecimalUtil.fromU64(amount.tokenB, decimalsB).toString(),
+      withdrawableA: DecimalUtil.fromBN(amount.tokenA, decimalsA).toString(),
+      withdrawableB: DecimalUtil.fromBN(amount.tokenB, decimalsB).toString(),
       ratioA,
       ratioB,
     };

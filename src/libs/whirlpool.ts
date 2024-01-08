@@ -1,10 +1,9 @@
 import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, AccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName } from "@orca-so/whirlpools-sdk";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
-import { u64 } from "@solana/spl-token";
 import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getTokenList, TokenInfo } from "./orcaapi";
@@ -87,33 +86,40 @@ export type WhirlpoolInfo = {
 export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const whirlpoolData = ParsableWhirlpool.parse(accountInfo.data);
+  const whirlpoolData = ParsableWhirlpool.parse(pubkey, accountInfo);
 
   // get mints
-  const mintPubkeys = [];
+  const mintPubkeys: PublicKey[] = [];
   mintPubkeys.push(whirlpoolData.tokenMintA);
   mintPubkeys.push(whirlpoolData.tokenMintB);
   mintPubkeys.push(whirlpoolData.rewardInfos[0].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[1].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[2].mint);
-  const mints = await fetcher.listMintInfos(mintPubkeys, true);
-  const decimalsA = mints[0].decimals;
-  const decimalsB = mints[1].decimals;
-  const decimalsR0 = mints[2]?.decimals;
-  const decimalsR1 = mints[3]?.decimals;
-  const decimalsR2 = mints[4]?.decimals;
+  const mints = await fetcher.getMintInfos(mintPubkeys, IGNORE_CACHE);
+  const decimalsA = mints.get(mintPubkeys[0].toBase58()).decimals;
+  const decimalsB = mints.get(mintPubkeys[1].toBase58()).decimals;
+  const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
+  const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
+  const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
 
   // get vaults
-  const vaultPubkeys = [];
+  const vaultPubkeys: PublicKey[] = [];
   vaultPubkeys.push(whirlpoolData.tokenVaultA);
   vaultPubkeys.push(whirlpoolData.tokenVaultB);
   vaultPubkeys.push(whirlpoolData.rewardInfos[0].vault);
   vaultPubkeys.push(whirlpoolData.rewardInfos[1].vault);
   vaultPubkeys.push(whirlpoolData.rewardInfos[2].vault);
-  const vaults = await fetcher.listTokenInfos(vaultPubkeys, true);
+  const vaultsMap = await fetcher.getTokenInfos(vaultPubkeys, IGNORE_CACHE);
+  const vaults = [
+    vaultsMap.get(vaultPubkeys[0].toBase58()),
+    vaultsMap.get(vaultPubkeys[1].toBase58()),
+    vaultsMap.get(vaultPubkeys[2].toBase58()),
+    vaultsMap.get(vaultPubkeys[3].toBase58()),
+    vaultsMap.get(vaultPubkeys[4].toBase58()),
+  ];
 
   // get token name
   const tokenList = await getTokenList();
@@ -135,7 +141,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     tickArrayStartIndexes.push(startTickIndex);
     tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, pubkey, startTickIndex).publicKey);
   }
-  const tickArrays = await fetcher.listTickArrays(tickArrayPubkeys, true);
+  const tickArrays = await fetcher.getTickArrays(tickArrayPubkeys, IGNORE_CACHE);
   const neighboringTickArrays: NeighboringTickArray[] = [];
   tickArrayStartIndexes.forEach((startTickIndex, i) => {
     neighboringTickArrays.push({
@@ -154,17 +160,17 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const maxStartTickIndex = TickUtil.getStartTickIndex(maxTickIndex, whirlpoolData.tickSpacing);
   const minTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, minStartTickIndex).publicKey;
   const maxTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, maxStartTickIndex).publicKey;
-  const tickArraysForFullRange = await fetcher.listTickArrays([
+  const tickArraysForFullRange = await fetcher.getTickArrays([
     minTickArrayPubkey,
     maxTickArrayPubkey,
-  ], true);
+  ], IGNORE_CACHE);
   const fullRangeTickArrays: FullRangeTickArray[] = [
     {pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0]},
     {pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1]},
   ];
 
   // get isotope whirlpools
-  const whirlpoolPubkeys = [];
+  const whirlpoolPubkeys: PublicKey[] = [];
   ISOTOPE_TICK_SPACINGS.forEach((tickSpacing) => {
     whirlpoolPubkeys.push(
       PDAUtil.getWhirlpool(
@@ -176,17 +182,18 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       ).publicKey
     );
   });
-  const whirlpools = await fetcher.listPools(whirlpoolPubkeys, true);
+  const whirlpools = await fetcher.getPools(whirlpoolPubkeys, IGNORE_CACHE);
   const isotopeWhirlpools: IsotopeWhirlpool[] = [];
   ISOTOPE_TICK_SPACINGS.forEach((tickSpacing, i) => {
-    if (whirlpools[i]) {
+    const whirlpool = whirlpools.get(whirlpoolPubkeys[i].toBase58());
+    if (whirlpool) {
       isotopeWhirlpools.push({
         tickSpacing,
-        feeRate: PoolUtil.getFeeRate(whirlpools[i].feeRate).toDecimal().mul(100),
+        feeRate: PoolUtil.getFeeRate(whirlpool.feeRate).toDecimal().mul(100),
         pubkey: whirlpoolPubkeys[i],
-        tickCurrentIndex: whirlpools[i].tickCurrentIndex,
-        price: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpools[i].sqrtPrice, decimalsA, decimalsB), decimalsB),
-        liquidity: whirlpools[i].liquidity,
+        tickCurrentIndex: whirlpool.tickCurrentIndex,
+        price: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpool.sqrtPrice, decimalsA, decimalsB), decimalsB),
+        liquidity: whirlpool.liquidity,
       });
     }
   });
@@ -198,7 +205,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   try {
     const calculated = listTradableAmounts(
       whirlpoolData,
-      tickArrays,
+      tickArrays.slice(),
       decimalsA,
       decimalsB,
     );
@@ -212,7 +219,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       whirlpoolData,
       tickArrayStartIndexes,
       tickArrayPubkeys,
-      tickArrays,
+      tickArrays.slice(),
       decimalsA,
       decimalsB,
     );
@@ -238,14 +245,14 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       tokenInfoR0,
       tokenInfoR1,
       tokenInfoR2,
-      tokenVaultAAmount: DecimalUtil.fromU64(vaults[0].amount, decimalsA),
-      tokenVaultBAmount: DecimalUtil.fromU64(vaults[1].amount, decimalsB),
-      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromU64(vaults[2].amount, decimalsR0),
-      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromU64(vaults[3].amount, decimalsR1),
-      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromU64(vaults[4].amount, decimalsR2),
-      reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromU64(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR0),
-      reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromU64(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
-      reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromU64(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),
+      tokenVaultAAmount: DecimalUtil.fromBN(vaults[0].amount, decimalsA),
+      tokenVaultBAmount: DecimalUtil.fromBN(vaults[1].amount, decimalsB),
+      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(vaults[2].amount, decimalsR0),
+      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(vaults[3].amount, decimalsR1),
+      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(vaults[4].amount, decimalsR2),
+      reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR0),
+      reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
+      reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),
       rewardLastUpdatedTimestamp: moment.unix(whirlpoolData.rewardLastUpdatedTimestamp.toNumber()),
       fullRangeTickArrays,
       neighboringTickArrays,
@@ -317,13 +324,13 @@ export type PositionInfo = {
 export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const positionData = ParsablePosition.parse(accountInfo.data);
+  const positionData = ParsablePosition.parse(pubkey, accountInfo);
 
   // get whirlpool
-  const whirlpoolData = await fetcher.getPool(positionData.whirlpool, true);
+  const whirlpoolData = await fetcher.getPool(positionData.whirlpool, IGNORE_CACHE);
 
   // get status & share
   const status = PositionUtil.getPositionStatus(whirlpoolData.tickCurrentIndex, positionData.tickLowerIndex, positionData.tickUpperIndex);
@@ -333,20 +340,20 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   }
 
   // get mints
-  const mintPubkeys = [];
+  const mintPubkeys: PublicKey[] = [];
   mintPubkeys.push(whirlpoolData.tokenMintA);
   mintPubkeys.push(whirlpoolData.tokenMintB);
   mintPubkeys.push(whirlpoolData.rewardInfos[0].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[1].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[2].mint);
   mintPubkeys.push(positionData.positionMint);
-  const mints = await fetcher.listMintInfos(mintPubkeys, true);
-  const decimalsA = mints[0].decimals;
-  const decimalsB = mints[1].decimals;
-  const decimalsR0 = mints[2]?.decimals;
-  const decimalsR1 = mints[3]?.decimals;
-  const decimalsR2 = mints[4]?.decimals;
-  const positionMintSupply = mints[5].supply.toNumber();
+  const mints = await fetcher.getMintInfos(mintPubkeys, IGNORE_CACHE);
+  const decimalsA = mints.get(mintPubkeys[0].toBase58()).decimals;
+  const decimalsB = mints.get(mintPubkeys[1].toBase58()).decimals;
+  const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
+  const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
+  const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
+  const positionMintSupply = Number((mints.get(mintPubkeys[5].toBase58()).supply as bigint).toString());
 
   const priceLower = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB), decimalsB);
   const priceUpper = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickUpperIndex, decimalsA, decimalsB), decimalsB);
@@ -365,7 +372,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const tickArrayPubkeys = [];
   tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, positionData.whirlpool, TickUtil.getStartTickIndex(positionData.tickLowerIndex, whirlpoolData.tickSpacing)).publicKey);
   tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, positionData.whirlpool, TickUtil.getStartTickIndex(positionData.tickUpperIndex, whirlpoolData.tickSpacing)).publicKey);
-  const tickArrays = await fetcher.listTickArrays(tickArrayPubkeys, true);
+  const tickArrays = await fetcher.getTickArrays(tickArrayPubkeys, IGNORE_CACHE);
   const tickLower = TickArrayUtil.getTickFromArray(tickArrays[0], positionData.tickLowerIndex, whirlpoolData.tickSpacing);
   const tickUpper = TickArrayUtil.getTickFromArray(tickArrays[1], positionData.tickUpperIndex, whirlpoolData.tickSpacing);
 
@@ -410,8 +417,8 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       invertedPriceLower,
       invertedPriceUpper,
       amounts,
-      amountA: DecimalUtil.fromU64(amounts.tokenA, decimalsA),
-      amountB: DecimalUtil.fromU64(amounts.tokenB, decimalsB),
+      amountA: DecimalUtil.fromBN(amounts.tokenA, decimalsA),
+      amountB: DecimalUtil.fromBN(amounts.tokenB, decimalsB),
       decimalsA,
       decimalsB,
       decimalsR0,
@@ -428,12 +435,12 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       tokenInfoR1,
       tokenInfoR2,
       feeQuote,
-      feeAmountA: DecimalUtil.fromU64(feeQuote.feeOwedA, decimalsA),
-      feeAmountB: DecimalUtil.fromU64(feeQuote.feeOwedB, decimalsB),
+      feeAmountA: DecimalUtil.fromBN(feeQuote.feeOwedA, decimalsA),
+      feeAmountB: DecimalUtil.fromBN(feeQuote.feeOwedB, decimalsB),
       rewardsQuote,
-      rewardAmount0: rewardsQuote[0] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[0], decimalsR0),
-      rewardAmount1: rewardsQuote[1] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[1], decimalsR1),
-      rewardAmount2: rewardsQuote[2] === undefined ? undefined : DecimalUtil.fromU64(rewardsQuote[2], decimalsR2),
+      rewardAmount0: rewardsQuote[0] === undefined ? undefined : DecimalUtil.fromBN(rewardsQuote[0], decimalsR0),
+      rewardAmount1: rewardsQuote[1] === undefined ? undefined : DecimalUtil.fromBN(rewardsQuote[1], decimalsR1),
+      rewardAmount2: rewardsQuote[2] === undefined ? undefined : DecimalUtil.fromBN(rewardsQuote[2], decimalsR2),
       status: status === PositionStatus.InRange ? PositionStatusString.PriceIsInRange : (status === PositionStatus.AboveRange ? PositionStatusString.PriceIsAboveRange : PositionStatusString.PriceIsBelowRange),
       sharePercentOfLiquidity,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
@@ -474,16 +481,16 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const connection = getConnection();
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(accountInfo.data);
+  const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(pubkey, accountInfo);
 
-  const feeTierPubkeys = [];
+  const feeTierPubkeys: PublicKey[] = [];
   for (let tickSpacing=1; tickSpacing < 2**16; tickSpacing *= 2) {
     feeTierPubkeys.push(PDAUtil.getFeeTier(accountInfo.owner, pubkey, tickSpacing).publicKey);
   }
   const accountInfos = await connection.getMultipleAccountsInfo(feeTierPubkeys);
   const feeTiers: InitializedFeeTier[] = [];
   accountInfos.forEach((a, i) => {
-    const feeTier = ParsableFeeTier.parse(a?.data);
+    const feeTier = ParsableFeeTier.parse(feeTierPubkeys[i], a);
     feeTiers.push({
       pubkey: feeTierPubkeys[i],
       tickSpacing: 2**i,
@@ -517,7 +524,7 @@ export async function getFeeTierInfo(addr: Address): Promise<FeeTierInfo> {
   const connection = getConnection();
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const feeTierData = ParsableFeeTier.parse(accountInfo.data);
+  const feeTierData = ParsableFeeTier.parse(pubkey, accountInfo);
 
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
@@ -545,13 +552,13 @@ type TickArrayInfo = {
 export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const tickArrayData = ParsableTickArray.parse(accountInfo.data);
+  const tickArrayData = ParsableTickArray.parse(pubkey, accountInfo);
 
   // get whirlpool
-  const whirlpoolData = await fetcher.getPool(tickArrayData.whirlpool, true);
+  const whirlpoolData = await fetcher.getPool(tickArrayData.whirlpool, IGNORE_CACHE);
 
   const ticksInArray = whirlpoolData.tickSpacing * TICK_ARRAY_SIZE;
   const prevTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, tickArrayData.whirlpool, tickArrayData.startTickIndex - ticksInArray).publicKey;
@@ -638,8 +645,8 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
     upwardTradableAmount.push({
       tickIndex: nextTickIndex,
       price: nextPrice,
-      amountA: DecimalUtil.fromU64(new u64(deltaA), decimalsA),
-      amountB: DecimalUtil.fromU64(new u64(deltaB), decimalsB),
+      amountA: DecimalUtil.fromBN(new BN(deltaA), decimalsA),
+      amountB: DecimalUtil.fromBN(new BN(deltaB), decimalsB),
     });
 
     if ( nextTick === undefined ) break;
@@ -666,8 +673,8 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
     downwardTradableAmount.push({
       tickIndex: nextTickIndex,
       price: nextPrice,
-      amountA: DecimalUtil.fromU64(new u64(deltaA), decimalsA),
-      amountB: DecimalUtil.fromU64(new u64(deltaB), decimalsB),
+      amountA: DecimalUtil.fromBN(new BN(deltaA), decimalsA),
+      amountB: DecimalUtil.fromBN(new BN(deltaB), decimalsB),
     });
 
     tickIndex = nextTickIndex;
@@ -725,8 +732,8 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
     const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, false);
     const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, true);
-    const deltaADecimal = DecimalUtil.fromU64(new u64(deltaA), decimalsA);
-    const deltaBDecimal = DecimalUtil.fromU64(new u64(deltaB), decimalsB);
+    const deltaADecimal = DecimalUtil.fromBN(new BN(deltaA), decimalsA);
+    const deltaBDecimal = DecimalUtil.fromBN(new BN(deltaB), decimalsB);
 
     upwardAmountA[upwardIndex] = upwardAmountA[upwardIndex].add(deltaADecimal);
     upwardAmountB[upwardIndex] = upwardAmountB[upwardIndex].add(deltaBDecimal);
@@ -765,8 +772,8 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
     const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, true);
     const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, false);
-    const deltaADecimal = DecimalUtil.fromU64(new u64(deltaA), decimalsA);
-    const deltaBDecimal = DecimalUtil.fromU64(new u64(deltaB), decimalsB);
+    const deltaADecimal = DecimalUtil.fromBN(new BN(deltaA), decimalsA);
+    const deltaBDecimal = DecimalUtil.fromBN(new BN(deltaB), decimalsB);
 
     downwardAmountA[downwardIndex] = downwardAmountA[downwardIndex].add(deltaADecimal);
     downwardAmountB[downwardIndex] = downwardAmountB[downwardIndex].add(deltaBDecimal);
@@ -834,20 +841,21 @@ type PositionBundleInfo = {
 export async function getPositionBundleInfo(addr: Address): Promise<PositionBundleInfo> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
-  const positionBundleData = ParsablePositionBundle.parse(accountInfo.data);
+  const positionBundleData = ParsablePositionBundle.parse(pubkey, accountInfo);
 
-  const positionBundleMint = await fetcher.getMintInfo(positionBundleData.positionBundleMint, true);
-  const positionBundleMintSupply = positionBundleMint.supply.toNumber();
+  const positionBundleMint = await fetcher.getMintInfo(positionBundleData.positionBundleMint, IGNORE_CACHE);
+  const positionBundleMintSupply = Number((positionBundleMint.supply as bigint).toString());
 
   const occupiedIndexes = PositionBundleUtil.getOccupiedBundleIndexes(positionBundleData);
   const bundledPositionAddresses = occupiedIndexes.map((index) => {
     return PDAUtil.getBundledPosition(accountInfo.owner, positionBundleData.positionBundleMint, index).publicKey
   });
 
-  const bundledPositionDatas = await fetcher.listPositions(bundledPositionAddresses, true);
+  const bundledPositionDatasMap = await fetcher.getPositions(bundledPositionAddresses, IGNORE_CACHE);
+  const bundledPositionDatas = bundledPositionAddresses.map((addr) => bundledPositionDatasMap.get(addr.toBase58()));
 
   const bundledPositions: BundledPositionInfo[] = [];
   for (let i=0; i<bundledPositionDatas.length; i++) {
@@ -962,26 +970,26 @@ export const ORDER_BY_TOKEN_B_DESC = (a: PositionInfoForList, b: PositionInfoFor
 export async function listPoolPositions(poolAddr: Address): Promise<PoolPositions> {
   const poolPubkey = AddressUtil.toPubKey(poolAddr);
   const connection = getConnection();
-  const fetcher = new AccountFetcher(connection);
+  const fetcher = buildDefaultAccountFetcher(connection);
 
   // get whirlpool
   const { accountInfo, slotContext } = await getAccountInfo(connection, poolPubkey);
-  const whirlpoolData = ParsableWhirlpool.parse(accountInfo.data);
+  const whirlpoolData = ParsableWhirlpool.parse(poolPubkey, accountInfo);
   const programId = accountInfo.owner;
 
   // get mints
-  const mintPubkeys = [];
+  const mintPubkeys: PublicKey[] = [];
   mintPubkeys.push(whirlpoolData.tokenMintA);
   mintPubkeys.push(whirlpoolData.tokenMintB);
   mintPubkeys.push(whirlpoolData.rewardInfos[0].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[1].mint);
   mintPubkeys.push(whirlpoolData.rewardInfos[2].mint);
-  const mints = await fetcher.listMintInfos(mintPubkeys, true);
-  const decimalsA = mints[0].decimals;
-  const decimalsB = mints[1].decimals;
-  const decimalsR0 = mints[2]?.decimals;
-  const decimalsR1 = mints[3]?.decimals;
-  const decimalsR2 = mints[4]?.decimals;
+  const mints = await fetcher.getMintInfos(mintPubkeys, IGNORE_CACHE);
+  const decimalsA = mints.get(mintPubkeys[0].toBase58()).decimals;
+  const decimalsB = mints.get(mintPubkeys[1].toBase58()).decimals;
+  const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
+  const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
+  const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
 
   // get token name
   const tokenList = await getTokenList();
@@ -1022,7 +1030,7 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
 
   const positionSlotContext = accounts.context.slot;
   const positions: PositionInfoForList[] = accounts.value.map((a) => {
-    const positionData = ParsablePosition.parse(a.account.data);
+    const positionData = ParsablePosition.parse(a.pubkey, a.account);
 
     // get status & share
     const status = PositionUtil.getPositionStatus(whirlpoolData.tickCurrentIndex, positionData.tickLowerIndex, positionData.tickUpperIndex);
@@ -1057,8 +1065,8 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
         invertedPriceLower,
         invertedPriceUpper,
         amounts,
-        amountA: DecimalUtil.fromU64(amounts.tokenA, decimalsA),
-        amountB: DecimalUtil.fromU64(amounts.tokenB, decimalsB),
+        amountA: DecimalUtil.fromBN(amounts.tokenA, decimalsA),
+        amountB: DecimalUtil.fromBN(amounts.tokenB, decimalsB),
         status: status === PositionStatus.InRange ? PositionStatusString.PriceIsInRange : (status === PositionStatus.AboveRange ? PositionStatusString.PriceIsAboveRange : PositionStatusString.PriceIsBelowRange),
         isBundledPosition,
         isFullRange,
