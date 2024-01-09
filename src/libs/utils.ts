@@ -79,3 +79,13 @@ function parseStringToBN(amount: string, decimals: number): BN {
   const base = new BN(10).pow(new BN(decimals));
   return integers.mul(base).add(fractions);
 }
+
+export function toJsonStringWithoutTopBracket(obj: any): string | null {
+  if (!obj) return null;
+
+  const result = Object.entries(obj).map(([key, value]) => {
+    return `"${key}": ${JSON.stringify(value, null, 4)}`;
+  }).join(",\n");
+
+  return result;
+}

@@ -6,6 +6,9 @@ import {
   unpackMint,
   Account,
   unpackAccount,
+  ExtensionType,
+  getExtensionTypes,
+  getExtensionData,
 // mint
   getTransferFeeConfig, TransferFeeConfig,
   getMintCloseAuthority, MintCloseAuthority,
@@ -24,7 +27,7 @@ import {
   getMemoTransfer, MemoTransfer,
   getCpiGuard, CpiGuard,
   getNonTransferableAccount, NonTransferableAccount,
-  getTransferHookAccount, TransferHookAccount, getExtensionData, ExtensionType,
+  getTransferHookAccount, TransferHookAccount,
 } from "@solana/spl-token-2022";
 import { TokenMetadata, unpack as unpackTokenMetadata } from '@solana/spl-token-metadata';
 import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
@@ -58,6 +61,7 @@ export type TokenAccount2022Info = {
   parsed: {
     base: Account,
     extensions: TokenAccount2022Extensions,
+    unknownExtensions: ExtensionType[],
   },
   derived: TokenAccount2022DerivedInfo,
 }
@@ -70,9 +74,9 @@ type Mint2022Extensions = {
   transferFeeConfig: TransferFeeConfig | null,
   mintCloseAuthority: MintCloseAuthority | null,
   // confidentialTransferMint
-  defaultAccount: DefaultAccountState | null,
+  defaultAccountState: DefaultAccountState | null,
   nonTransferable: NonTransferable | null,
-  interestBearingMintConfig: InterestBearingMintConfigState | null,
+  interestBearingConfig: InterestBearingMintConfigState | null,
   permanentDelegate: PermanentDelegate | null,
   transferHook: TransferHook | null,
   metadataPointer: Partial<MetadataPointer> | null,
@@ -84,6 +88,7 @@ export type Mint2022Info = {
   parsed: {
     base: Mint,
     extensions: Mint2022Extensions,
+    unknownExtensions: ExtensionType[],
   },
   derived: Mint2022DerivedInfo,
 }
@@ -107,6 +112,21 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
   const nonTransferableAccount = getNonTransferableAccount(account);
   const transferHookAccount = getTransferHookAccount(account);
 
+  const extensions = getExtensionTypes(account.tlvData);
+  const unknownExtensions = extensions.sort().filter((e) => {
+    switch (e) {
+      case ExtensionType.TransferFeeAmount:
+      case ExtensionType.ImmutableOwner:
+      case ExtensionType.MemoTransfer:
+      case ExtensionType.CpiGuard:
+      case ExtensionType.NonTransferableAccount:
+      case ExtensionType.TransferHookAccount:
+        return false;
+      default:
+        return true;
+    }
+  });
+
   // isATA ?
   const ataAddress = await utils.token.associatedAddress({ mint: account.mint, owner: account.owner });
   const isATA = ataAddress.equals(pubkey);
@@ -122,7 +142,8 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
         cpiGuard,
         nonTransferableAccount,
         transferHookAccount,
-      }
+      },
+      unknownExtensions,
     },
     derived: {
       decimals: mint.decimals,
@@ -142,9 +163,9 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
   const transferFeeConfig = getTransferFeeConfig(mint);
   const mintCloseAuthority = getMintCloseAuthority(mint);
   // const confidentialTransferMint = ?
-  const defaultAccount = getDefaultAccountState(mint);
+  const defaultAccountState = getDefaultAccountState(mint);
   const nonTransferable = getNonTransferable(mint);
-  const interestBearingMintConfig = getInterestBearingMintConfigState(mint);
+  const interestBearingConfig = getInterestBearingMintConfigState(mint);
   const permanentDelegate = getPermanentDelegate(mint);
   const transferHook = getTransferHook(mint);
   const metadataPointer = getMetadataPointerState(mint);
@@ -154,6 +175,24 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
     return unpackTokenMetadata(data);
   })();
 
+  const extensions = getExtensionTypes(mint.tlvData);
+  const unknownExtensions = extensions.sort().filter((e) => {
+    switch (e) {
+      case ExtensionType.TransferFeeConfig:
+      case ExtensionType.MintCloseAuthority:
+      case ExtensionType.DefaultAccountState:
+      case ExtensionType.NonTransferable:
+      case ExtensionType.InterestBearingConfig:
+      case ExtensionType.PermanentDelegate:
+      case ExtensionType.TransferHook:
+      case ExtensionType.MetadataPointer:
+      case ExtensionType.TokenMetadata:
+        return false;
+      default:
+        return true;
+    }
+  });
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: {
@@ -161,14 +200,15 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
       extensions: {
         transferFeeConfig,
         mintCloseAuthority,
-        defaultAccount,
+        defaultAccountState,
         nonTransferable,
-        interestBearingMintConfig,
+        interestBearingConfig,
         permanentDelegate,
         transferHook,
         metadataPointer,
         tokenMetadata,
       },
+      unknownExtensions,
     },
     derived: {
       supply: DecimalUtil.fromBN(new BN(mint.supply.toString()), mint.decimals),

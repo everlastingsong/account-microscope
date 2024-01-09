@@ -10,6 +10,8 @@
   export let params;
 
   import { getMint2022Info, ACCOUNT_DEFINITION } from "../../libs/token2022";
+  import ExtensionData from "../../components/ExtensionData.svelte";
+  import { toJsonStringWithoutTopBracket } from "../../libs/utils";
 //  import Laboratory from "../../components/Laboratory.svelte";
 //  import TokenMintCreateAta from "../../components/TokenMintCreateATA.svelte";
 //  import TokenMintRewriteAuthority from "../../components/TokenMintRewriteAuthority.svelte";
@@ -31,9 +33,40 @@
   <Data name="mintAuthority" type="COption<PublicKey>" offset="COption(0)+PublicKey(4)"><Pubkey address={mintInfo.parsed.base.mintAuthority} /></Data>
   <Data name="freezeAuthority" type="COption<PublicKey>" offset="COption(46)+PublicKey(50)"><Pubkey address={mintInfo.parsed.base.freezeAuthority} /></Data>
   <Data name="extensions">
-    <pre>
-    {JSON.stringify(mintInfo.parsed.extensions, null, 2)}
-    </pre>
+    {#if mintInfo.parsed.unknownExtensions.length > 0}
+    <ExtensionData name="Unknown ExtensionType🚨" href="https://github.com/solana-labs/solana-program-library/blob/master/token/program-2022/src/extension/mod.rs#L906" desc="Please be careful. Account microscope detected unknown extensions.">
+      <pre>{JSON.stringify(mintInfo.parsed.unknownExtensions)}</pre>
+    </ExtensionData>
+    {/if}
+
+    <!-- desc is quoted from: https://github.com/solana-labs/solana-program-library/blob/master/token/program-2022/src/extension/mod.rs#L906 -->
+    <ExtensionData name="TransferFeeConfig(1)" href="https://spl.solana.com/token-2022/extensions#transfer-fees" desc="Includes transfer fee rate info and accompanying authorities to withdraw and set the fee">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.transferFeeConfig)}</pre>
+    </ExtensionData>
+    <ExtensionData name="MintCloseAuthority(3)" href="https://spl.solana.com/token-2022/extensions#mint-close-authority" desc="Includes an optional mint close authority">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.mintCloseAuthority)}</pre>
+    </ExtensionData>
+    <ExtensionData name="DefaultAccountState(6)" href="https://spl.solana.com/token-2022/extensions#default-account-state" desc="Specifies the default Account::state for new Accounts">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.defaultAccountState)}</pre>
+    </ExtensionData>
+    <ExtensionData name="NonTransferable(9)" href="https://spl.solana.com/token-2022/extensions#non-transferable-tokens" desc="Indicates that the tokens from this mint can't be transfered">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.nonTransferable)}</pre>
+    </ExtensionData>
+    <ExtensionData name="InterestBearingConfig(10)" href="https://spl.solana.com/token-2022/extensions#interest-bearing-tokens" desc="Tokens accrue interest over time">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.interestBearingConfig)}</pre>
+    </ExtensionData>
+    <ExtensionData name="PermanentDelegate(12)" href="https://spl.solana.com/token-2022/extensions#permanent-delegate" desc="Includes an optional permanent delegate">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.permanentDelegate)}</pre>
+    </ExtensionData>
+    <ExtensionData name="TransferHook(14)" href="https://spl.solana.com/token-2022/extensions#transfer-hook" desc="Mint requires a CPI to a program implementing the 'transfer hook' interface">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.transferHook)}</pre>
+    </ExtensionData>
+    <ExtensionData name="MetadataPointer(18)" href="https://spl.solana.com/token-2022/extensions#metadata-pointer" desc="Mint contains a pointer to another account (or the same account) that holds metadata">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.metadataPointer)}</pre>
+    </ExtensionData>
+    <ExtensionData name="TokenMetadata(19)" href="https://spl.solana.com/token-2022/extensions#metadata" desc="Mint contains token-metadata">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenMetadata)}</pre>
+    </ExtensionData>
   </Data>
 </ParsedData>
 
