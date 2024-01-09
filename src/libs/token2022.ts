@@ -112,6 +112,7 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
   const nonTransferableAccount = getNonTransferableAccount(account);
   const transferHookAccount = getTransferHookAccount(account);
 
+  // tlvData: Type(2bytes) + Length(2bytes) + Value(Length bytes)
   const extensions = getExtensionTypes(account.tlvData);
   const unknownExtensions = extensions.sort().filter((e) => {
     switch (e) {
@@ -175,6 +176,7 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
     return unpackTokenMetadata(data);
   })();
 
+  // tlvData: Type(2bytes) + Length(2bytes) + Value(Length bytes)
   const extensions = getExtensionTypes(mint.tlvData);
   const unknownExtensions = extensions.sort().filter((e) => {
     switch (e) {
