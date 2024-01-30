@@ -12,7 +12,7 @@ https://everlastingsong.github.io/account-microscope/#/whirlpool/list
 
 
 ## Supported accounts
-### Token
+### Token / Token-2022 (aka Token Extension)
 - Mint
 - Account
 
