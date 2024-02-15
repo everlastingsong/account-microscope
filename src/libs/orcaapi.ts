@@ -21,7 +21,7 @@ export type WhirlpoolListEntry = {
   usdVolumeDay: Decimal,
 }
 
-function whirlpoolListEntryCmp(a: WhirlpoolListEntry, b: WhirlpoolListEntry): number {
+export function whirlpoolListEntryCmp(a: WhirlpoolListEntry, b: WhirlpoolListEntry): number {
   if ( a.symbolA < b.symbolA ) return -1;
   if ( a.symbolA > b.symbolA ) return +1;
   if ( a.symbolB < b.symbolB ) return -1;
@@ -61,7 +61,8 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
     });
   });
 
-  list.sort(whirlpoolListEntryCmp);
+  // avoid double sort processing
+  //list.sort(whirlpoolListEntryCmp);
 
   _cachedWhirlpoolListExpire = now.add("15", "m"); // 15 min
   _cachedWhirlpoolList = list;
