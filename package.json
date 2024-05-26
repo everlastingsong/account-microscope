@@ -28,12 +28,12 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "@solana/web3.js": "^1.78.4",
+    "@solana/web3.js": "^1.90.0",
     "@solana/spl-token": "^0.3.10",
-    "@solana/spl-token-2022": "npm:@solana/spl-token@0.3.10",
-    "@orca-so/whirlpools-sdk": "^0.11.8",
-    "@orca-so/common-sdk": "^0.3.5",
-    "@coral-xyz/anchor": "^0.27.0",
+    "@solana/spl-token-2022": "npm:@solana/spl-token@0.4.1",
+    "@orca-so/whirlpools-sdk": "0.13.0-alpha.0",
+    "@orca-so/common-sdk": "^0.6.0-alpha.1",
+    "@coral-xyz/anchor": "^0.29.0",
     "@orca-so/aquafarm": "^0.0.12",
     "@orca-so/stablecurve": "^1.0.6",
     "@rollup/plugin-json": "^5.0.1",

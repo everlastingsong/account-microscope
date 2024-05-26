@@ -2,6 +2,8 @@
 <ul>
   <li>Whirlpool / Whirlpool</li>
   <li>Whirlpool / WhirlpoolsConfig</li>
+  <li>Whirlpool / WhirlpoolsConfigExtension</li>
+  <li>Whirlpool / TokenBadge</li>
   <li>Whirlpool / FeeTier</li>
   <li>Whirlpool / Position</li>
   <li>Whirlpool / TickArray</li>
