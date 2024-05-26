@@ -75,6 +75,9 @@
 {:else}
 <span>{address}</span>
 {/if}
+{#if type === "token2022/mint" || type === "token2022/account"}
+{"[2022]"}
+{/if}
 {#if tokenInfo && !tokenInfo.poolToken}
 ({tokenInfo.symbol})
 {/if}

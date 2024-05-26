@@ -16,7 +16,7 @@
   import { TokenInfo } from "../../libs/orcaapi";
   import Laboratory from "../../components/Laboratory.svelte";
   import WhirlpoolClonePool from "../../components/WhirlpoolClonePool.svelte";
-  import { on } from "events";
+  import TokenPubkey from "../../components/TokenPubkey.svelte";
   function symbol_if_not_undefined(tokenInfo: TokenInfo, symbolOnly: boolean = false): string {
     if (tokenInfo === undefined) return "";
     return symbolOnly ? tokenInfo.symbol : `(${tokenInfo.symbol})`;
@@ -45,12 +45,12 @@
 <ParsedAndDerivedData>
 <ParsedData>
   <Data name="whirlpoolsConfig" type="PublicKey" offset="8"><Pubkey type="whirlpool/config" address={whirlpoolInfo.parsed.whirlpoolsConfig} /></Data>
-  <Data name="tokenMintA" type="PublicKey" offset="101"><Pubkey type="token/mint" address={whirlpoolInfo.parsed.tokenMintA} /></Data>
-  <Data name="tokenMintB" type="PublicKey" offset="181"><Pubkey type="token/mint" address={whirlpoolInfo.parsed.tokenMintB} /></Data>
+  <Data name="tokenMintA" type="PublicKey" offset="101"><TokenPubkey type="token/mint" address={whirlpoolInfo.parsed.tokenMintA} program={whirlpoolInfo.derived.tokenProgramA} /></Data>
+  <Data name="tokenMintB" type="PublicKey" offset="181"><TokenPubkey type="token/mint" address={whirlpoolInfo.parsed.tokenMintB} program={whirlpoolInfo.derived.tokenProgramB} /></Data>
   <Data name="tickSpacing" type="u16" offset="41">{whirlpoolInfo.parsed.tickSpacing}</Data>
   <Data name="liquidity" type="u128" offset="49">{whirlpoolInfo.parsed.liquidity}</Data>
-  <Data name="tokenVaultA" type="PublicKey" offset="133"><Pubkey type="token/account" address={whirlpoolInfo.parsed.tokenVaultA} /></Data>
-  <Data name="tokenVaultB" type="PublicKey" offset="213"><Pubkey type="token/account" address={whirlpoolInfo.parsed.tokenVaultB} /></Data>
+  <Data name="tokenVaultA" type="PublicKey" offset="133"><TokenPubkey type="token/account" address={whirlpoolInfo.parsed.tokenVaultA} program={whirlpoolInfo.derived.tokenProgramA} /></Data>
+  <Data name="tokenVaultB" type="PublicKey" offset="213"><TokenPubkey type="token/account" address={whirlpoolInfo.parsed.tokenVaultB} program={whirlpoolInfo.derived.tokenProgramB} /></Data>
   <Data name="sqrtPrice" type="u128" offset="65">{whirlpoolInfo.parsed.sqrtPrice}</Data>
   <Data name="tickCurrentIndex" type="i32" offset="81">{whirlpoolInfo.parsed.tickCurrentIndex}</Data>
   <Data name="feeGrowthGlobalA" type="u128" offset="165">{whirlpoolInfo.parsed.feeGrowthGlobalA}</Data>
@@ -62,22 +62,22 @@
   <Data name="whirlpoolBump" type="[u8; 1]" offset="40">[{whirlpoolInfo.parsed.whirlpoolBump[0]}]</Data>
   <Data name="rewardLastUpdatedTimestamp" type="u64" offset="261">{whirlpoolInfo.parsed.rewardLastUpdatedTimestamp}</Data>
   <Data name="rewardInfos[0]">
-    <Data name="mint" type="PublicKey" offset="269"><Pubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[0].mint} /></Data>
-    <Data name="vault" type="PublicKey" offset="301"><Pubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[0].vault} /></Data>
+    <Data name="mint" type="PublicKey" offset="269"><TokenPubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[0].mint} program={whirlpoolInfo.derived.tokenProgramR0} /></Data>
+    <Data name="vault" type="PublicKey" offset="301"><TokenPubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[0].vault} program={whirlpoolInfo.derived.tokenProgramR0} /></Data>
     <Data name="emissionsPerSecondX64" type="u128" offset="365">{whirlpoolInfo.parsed.rewardInfos[0].emissionsPerSecondX64}</Data>
     <Data name="authority" type="PublicKey" offset="333"><Pubkey address={whirlpoolInfo.parsed.rewardInfos[0].authority} /></Data>
     <Data name="growthGlobalX64" type="u128" offset="381">{whirlpoolInfo.parsed.rewardInfos[0].growthGlobalX64}</Data>
   </Data>
   <Data name="rewardInfos[1]">
-    <Data name="mint" type="PublicKey" offset="397"><Pubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[1].mint} /></Data>
-    <Data name="vault" type="PublicKey" offset="429"><Pubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[1].vault} /></Data>
+    <Data name="mint" type="PublicKey" offset="397"><TokenPubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[1].mint} program={whirlpoolInfo.derived.tokenProgramR1} /></Data>
+    <Data name="vault" type="PublicKey" offset="429"><TokenPubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[1].vault} program={whirlpoolInfo.derived.tokenProgramR1} /></Data>
     <Data name="emissionsPerSecondX64" type="u128" offset="493">{whirlpoolInfo.parsed.rewardInfos[1].emissionsPerSecondX64}</Data>
     <Data name="authority" type="PublicKey" offset="461"><Pubkey address={whirlpoolInfo.parsed.rewardInfos[1].authority} /></Data>
     <Data name="growthGlobalX64" type="u128" offset="509">{whirlpoolInfo.parsed.rewardInfos[1].growthGlobalX64}</Data>
   </Data>
   <Data name="rewardInfos[2]">
-    <Data name="mint" type="PublicKey" offset="525"><Pubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[2].mint} /></Data>
-    <Data name="vault" type="PublicKey" offset="557"><Pubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[2].vault} /></Data>
+    <Data name="mint" type="PublicKey" offset="525"><TokenPubkey type="token/mint" address={whirlpoolInfo.parsed.rewardInfos[2].mint} program={whirlpoolInfo.derived.tokenProgramR2} /></Data>
+    <Data name="vault" type="PublicKey" offset="557"><TokenPubkey type="token/account" address={whirlpoolInfo.parsed.rewardInfos[2].vault} program={whirlpoolInfo.derived.tokenProgramR2} /></Data>
     <Data name="emissionsPerSecondX64" type="u128" offset="621">{whirlpoolInfo.parsed.rewardInfos[2].emissionsPerSecondX64}</Data>
     <Data name="authority" type="PublicKey" offset="589"><Pubkey address={whirlpoolInfo.parsed.rewardInfos[2].authority} /></Data>
     <Data name="growthGlobalX64" type="u128" offset="637">{whirlpoolInfo.parsed.rewardInfos[2].growthGlobalX64}</Data>
@@ -85,15 +85,15 @@
 </ParsedData>
 
 <DerivedData>
-  <Data name="decimals">
+  <Data name="token program, decimals">
     <table style="border-spacing: 0;">
-      <thead><th>token</th><th>decimals</th></thead>
+      <thead><th>token</th><th>program</th><th>decimals</th></thead>
       <tbody>
-        <tr><td>A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</td><td>{whirlpoolInfo.derived.decimalsA}</td></tr>
-        <tr><td>B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</td><td>{whirlpoolInfo.derived.decimalsB}</td></tr>
-        <tr><td>reward0{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR0)}</td><td>{whirlpoolInfo.derived.decimalsR0}</td></tr>
-        <tr><td>reward1{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR1)}</td><td>{whirlpoolInfo.derived.decimalsR1}</td></tr>
-        <tr><td>reward2{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR2)}</td><td>{whirlpoolInfo.derived.decimalsR2}</td></tr>
+        <tr><td>A{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</td><td>{whirlpoolInfo.derived.tokenProgramA}</td><td>{whirlpoolInfo.derived.decimalsA}</td></tr>
+        <tr><td>B{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</td><td>{whirlpoolInfo.derived.tokenProgramB}</td><td>{whirlpoolInfo.derived.decimalsB}</td></tr>
+        <tr><td>reward0{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR0)}</td><td>{whirlpoolInfo.derived.tokenProgramR0}</td><td>{whirlpoolInfo.derived.decimalsR0}</td></tr>
+        <tr><td>reward1{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR1)}</td><td>{whirlpoolInfo.derived.tokenProgramR1}</td><td>{whirlpoolInfo.derived.decimalsR1}</td></tr>
+        <tr><td>reward2{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoR2)}</td><td>{whirlpoolInfo.derived.tokenProgramR2}</td><td>{whirlpoolInfo.derived.decimalsR2}</td></tr>
       </tbody>
     </table>  
   </Data>

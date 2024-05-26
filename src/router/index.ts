@@ -3,6 +3,8 @@ import Home from "../pages/Home.svelte";
 import Whirlpool from "../pages/whirlpool/Whirlpool.svelte";
 import Position from "../pages/whirlpool/Position.svelte";
 import WhirlpoolsConfig from "../pages/whirlpool/WhirlpoolsConfig.svelte";
+import WhirlpoolsConfigExtension from "../pages/whirlpool/WhirlpoolsConfigExtension.svelte";
+import TokenBadge from "../pages/whirlpool/TokenBadge.svelte";
 import FeeTier from "../pages/whirlpool/FeeTier.svelte";
 import TickArray from "../pages/whirlpool/TickArray.svelte";
 import PositionBundle from "../pages/whirlpool/PositionBundle.svelte";
@@ -32,6 +34,8 @@ export const routes = {
   '/whirlpool/listPositions/:pubkey': PositionList,
 //  '/whirlpool/findPositionsByRange': FindPositions,
   '/whirlpool/config/:pubkey': WhirlpoolsConfig,
+  '/whirlpool/configextension/:pubkey': WhirlpoolsConfigExtension,
+  '/whirlpool/tokenbadge/:pubkey': TokenBadge,
   '/whirlpool/feetier/:pubkey': FeeTier,
   '/whirlpool/whirlpool/:pubkey': Whirlpool,
   '/whirlpool/tickarray/:pubkey': TickArray,

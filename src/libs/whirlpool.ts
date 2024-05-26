@@ -1,5 +1,5 @@
 import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE } from "@orca-so/whirlpools-sdk";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE, WhirlpoolsConfigExtensionData, ParsableWhirlpoolsConfigExtension, TokenBadgeData, ParsableTokenBadge } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
@@ -9,6 +9,9 @@ import { getConnection } from "./client";
 import { getTokenList, TokenInfo } from "./orcaapi";
 import Decimal from "decimal.js";
 import moment from "moment";
+import { TokenExtensionUtil } from "@orca-so/whirlpools-sdk/dist/utils/public/token-extension-util";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
@@ -20,6 +23,17 @@ export const ACCOUNT_DEFINITION = {
   FeeTier: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/fee_tier.rs#L12",
   TickArray: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/tick.rs#L143",
   PositionBundle: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position_bundle.rs#L9",
+  WhirlpoolsConfigExtension: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/config_extension.rs#L11",
+  TokenBadge: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/token_badge.rs#L5",
+}
+
+export type TokenProgram = "token" | "token-2022";
+
+function toTokenProgram(tokenProgram: PublicKey | undefined): TokenProgram {
+  if (!tokenProgram) return undefined;
+  if (tokenProgram.equals(TOKEN_PROGRAM_ID)) return "token";
+  if (tokenProgram.equals(TOKEN_2022_PROGRAM_ID)) return "token-2022";
+  throw new Error(`Unknown token program: ${tokenProgram.toBase58()}`);
 }
 
 type NeighboringTickArray = {
@@ -55,6 +69,11 @@ type WhirlpoolDerivedInfo = {
   decimalsR0?: number,
   decimalsR1?: number,
   decimalsR2?: number,
+  tokenProgramA: TokenProgram,
+  tokenProgramB: TokenProgram,
+  tokenProgramR0?: TokenProgram,
+  tokenProgramR1?: TokenProgram,
+  tokenProgramR2?: TokenProgram,
   tokenInfoA?: TokenInfo,
   tokenInfoB?: TokenInfo,
   tokenInfoR0?: TokenInfo,
@@ -104,6 +123,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
   const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
   const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
+  const tokenProgramA = toTokenProgram(mints.get(mintPubkeys[0].toBase58()).tokenProgram);
+  const tokenProgramB = toTokenProgram(mints.get(mintPubkeys[1].toBase58()).tokenProgram);
+  const tokenProgramR0 = toTokenProgram(mints.get(mintPubkeys[2].toBase58())?.tokenProgram);
+  const tokenProgramR1 = toTokenProgram(mints.get(mintPubkeys[3].toBase58())?.tokenProgram);
+  const tokenProgramR2 = toTokenProgram(mints.get(mintPubkeys[4].toBase58())?.tokenProgram);
 
   // get vaults
   const vaultPubkeys: PublicKey[] = [];
@@ -240,6 +264,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       decimalsR0,
       decimalsR1,
       decimalsR2,
+      tokenProgramA,
+      tokenProgramB,
+      tokenProgramR0,
+      tokenProgramR1,
+      tokenProgramR2,
       tokenInfoA,
       tokenInfoB,
       tokenInfoR0,
@@ -283,6 +312,11 @@ type PositionDerivedInfo = {
   decimalsR0?: number,
   decimalsR1?: number,
   decimalsR2?: number,
+  tokenProgramA: TokenProgram,
+  tokenProgramB: TokenProgram,
+  tokenProgramR0?: TokenProgram,
+  tokenProgramR1?: TokenProgram,
+  tokenProgramR2?: TokenProgram,
   tokenMintA: PublicKey,
   tokenMintB: PublicKey,
   tokenMintR0: PublicKey,
@@ -353,6 +387,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
   const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
   const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
+  const tokenProgramA = toTokenProgram(mints.get(mintPubkeys[0].toBase58()).tokenProgram);
+  const tokenProgramB = toTokenProgram(mints.get(mintPubkeys[1].toBase58()).tokenProgram);
+  const tokenProgramR0 = toTokenProgram(mints.get(mintPubkeys[2].toBase58())?.tokenProgram);
+  const tokenProgramR1 = toTokenProgram(mints.get(mintPubkeys[3].toBase58())?.tokenProgram);
+  const tokenProgramR2 = toTokenProgram(mints.get(mintPubkeys[4].toBase58())?.tokenProgram);
   const positionMintSupply = Number((mints.get(mintPubkeys[5].toBase58()).supply as bigint).toString());
 
   const priceLower = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB), decimalsB);
@@ -376,11 +415,18 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const tickLower = TickArrayUtil.getTickFromArray(tickArrays[0], positionData.tickLowerIndex, whirlpoolData.tickSpacing);
   const tickUpper = TickArrayUtil.getTickFromArray(tickArrays[1], positionData.tickUpperIndex, whirlpoolData.tickSpacing);
 
+  const tokenExtensionCtx = await TokenExtensionUtil.buildTokenExtensionContext(
+    fetcher,
+    whirlpoolData,
+    IGNORE_CACHE,
+  );
+
   const feeQuote = collectFeesQuote({
     position: positionData,
     tickLower,
     tickUpper,
     whirlpool: whirlpoolData,
+    tokenExtensionCtx,
   });
 
   const rewardsQuote = collectRewardsQuote({
@@ -388,6 +434,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
     tickLower,
     tickUpper,
     whirlpool: whirlpoolData,
+    tokenExtensionCtx,
   });
 
   // get token name
@@ -424,6 +471,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       decimalsR0,
       decimalsR1,
       decimalsR2,
+      tokenProgramA,
+      tokenProgramB,
+      tokenProgramR0,
+      tokenProgramR1,
+      tokenProgramR2,
       tokenMintA: whirlpoolData.tokenMintA,
       tokenMintB: whirlpoolData.tokenMintB,
       tokenMintR0: whirlpoolData.rewardInfos[0].mint,
@@ -467,6 +519,7 @@ type InitializedFeeTier = {
 
 type WhirlpoolsConfigDerivedInfo = {
   defaultProtocolFeeRate: Decimal,
+  configExtension: PublicKey,
   feeTiers: InitializedFeeTier[],
 }
 
@@ -499,12 +552,67 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
     });
   });
 
+  const configExtension = PDAUtil.getConfigExtension(accountInfo.owner, pubkey).publicKey;
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: whirlpoolsConfigData,
     derived: {
       defaultProtocolFeeRate: PoolUtil.getProtocolFeeRate(whirlpoolsConfigData.defaultProtocolFeeRate).toDecimal().mul(100),
+      configExtension,
       feeTiers,
+    }
+  };
+}
+
+type WhirlpoolsConfigExtensionDerivedInfo = {
+}
+
+type WhirlpoolsConfigExtensionInfo = {
+  meta: AccountMetaInfo,
+  parsed: WhirlpoolsConfigExtensionData,
+  derived: WhirlpoolsConfigExtensionDerivedInfo,
+}
+
+export async function getWhirlpoolsConfigExtensionInfo(addr: Address): Promise<WhirlpoolsConfigExtensionInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
+  const whirlpoolsConfigExtensionData = ParsableWhirlpoolsConfigExtension.parse(pubkey, accountInfo);
+
+  return {
+    meta: toMeta(pubkey, accountInfo, slotContext),
+    parsed: whirlpoolsConfigExtensionData,
+    derived: {}
+  };
+}
+
+type TokenBadgeDerivedInfo = {
+  tokenProgram: TokenProgram,
+}
+
+type TokenBadgeInfo = {
+  meta: AccountMetaInfo,
+  parsed: TokenBadgeData,
+  derived: TokenBadgeDerivedInfo,
+}
+
+export async function getTokenBadgeInfo(addr: Address): Promise<TokenBadgeInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+  const fetcher = buildDefaultAccountFetcher(connection);
+
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
+  const tokenBadgeData = ParsableTokenBadge.parse(pubkey, accountInfo);
+
+  const mint = await fetcher.getMintInfo(tokenBadgeData.tokenMint, IGNORE_CACHE);
+
+  return {
+    meta: toMeta(pubkey, accountInfo, slotContext),
+    parsed: tokenBadgeData,
+    derived: {
+      tokenProgram: toTokenProgram(mint.tokenProgram),
     }
   };
 }
@@ -913,6 +1021,11 @@ type WhirlpoolDerivedInfoForList = {
   decimalsR0?: number,
   decimalsR1?: number,
   decimalsR2?: number,
+  tokenProgramA: TokenProgram,
+  tokenProgramB: TokenProgram,
+  tokenProgramR0?: TokenProgram,
+  tokenProgramR1?: TokenProgram,
+  tokenProgramR2?: TokenProgram,
   tokenInfoA?: TokenInfo,
   tokenInfoB?: TokenInfo,
   tokenInfoR0?: TokenInfo,
@@ -990,6 +1103,11 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
   const decimalsR0 = mints.get(mintPubkeys[2].toBase58())?.decimals;
   const decimalsR1 = mints.get(mintPubkeys[3].toBase58())?.decimals;
   const decimalsR2 = mints.get(mintPubkeys[4].toBase58())?.decimals;
+  const tokenProgramA = toTokenProgram(mints.get(mintPubkeys[0].toBase58()).tokenProgram);
+  const tokenProgramB = toTokenProgram(mints.get(mintPubkeys[1].toBase58()).tokenProgram);
+  const tokenProgramR0 = toTokenProgram(mints.get(mintPubkeys[2].toBase58())?.tokenProgram);
+  const tokenProgramR1 = toTokenProgram(mints.get(mintPubkeys[3].toBase58())?.tokenProgram);
+  const tokenProgramR2 = toTokenProgram(mints.get(mintPubkeys[4].toBase58())?.tokenProgram);
 
   // get token name
   const tokenList = await getTokenList();
@@ -1008,6 +1126,11 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
       decimalsR0,
       decimalsR1,
       decimalsR2,
+      tokenProgramA,
+      tokenProgramB,
+      tokenProgramR0,
+      tokenProgramR1,
+      tokenProgramR2,
       tokenInfoA,
       tokenInfoB,
       tokenInfoR0,

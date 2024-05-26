@@ -19,6 +19,8 @@ https://everlastingsong.github.io/account-microscope/#/whirlpool/list
 ### Orca Whirlpool
 - Whirlpool
 - WhirlpoolsConfig
+- WhirlpoolsConfigExtension
+- TokenBadge
 - FeeTier
 - Position
 - TickArray
