@@ -61,7 +61,7 @@ export function toAccountJSON(meta: AccountMetaInfo, embedSlotContext: boolean):
       executable: meta.executable,
       lamports: meta.lamports,
       owner: meta.owner.toBase58(),
-      rentEpoch: meta.rentEpoch ?? 0,
+      rentEpoch: /* meta.rentEpoch ?? */ 0, // now all accounts must be rent-exempt
       data: [meta.data.toString("base64"), "base64"],
     },
     ...slotContext,
