@@ -14,7 +14,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
-const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
+const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512];
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
@@ -536,17 +536,23 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(pubkey, accountInfo);
 
-  const feeTierPubkeys: PublicKey[] = [];
+  const tickSpacingSet: Set<number> = new Set(ISOTOPE_TICK_SPACINGS);
   for (let tickSpacing=1; tickSpacing < 2**16; tickSpacing *= 2) {
-    feeTierPubkeys.push(PDAUtil.getFeeTier(accountInfo.owner, pubkey, tickSpacing).publicKey);
+    tickSpacingSet.add(tickSpacing);
   }
+
+  const tickSpacings = Array.from(tickSpacingSet).sort((a, b) => a - b);
+  const feeTierPubkeys: PublicKey[] = tickSpacings.map((tickSpacing) => {
+    return PDAUtil.getFeeTier(accountInfo.owner, pubkey, tickSpacing).publicKey;
+  });
+
   const accountInfos = await connection.getMultipleAccountsInfo(feeTierPubkeys);
   const feeTiers: InitializedFeeTier[] = [];
   accountInfos.forEach((a, i) => {
     const feeTier = ParsableFeeTier.parse(feeTierPubkeys[i], a);
     feeTiers.push({
       pubkey: feeTierPubkeys[i],
-      tickSpacing: 2**i,
+      tickSpacing: tickSpacings[i],
       isInitialized: feeTier !== null,
       defaultFeeRate: feeTier === null ? undefined : PoolUtil.getFeeRate(feeTier.defaultFeeRate).toDecimal().mul(100),
     });
