@@ -72,6 +72,8 @@
 
 <DerivedData>
   <Data name="supply">{mintInfo.derived.supply}</Data>
+  <Data name="metadata (metaplex)"><Pubkey address={mintInfo.derived.metadataMetaplex} /></Data>
+  <Data name="metadata (fluxbeam)"><Pubkey address={mintInfo.derived.metadataFluxbeam} /></Data>
 </DerivedData>
 
 <!--Laboratory>

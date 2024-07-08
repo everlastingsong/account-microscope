@@ -34,6 +34,8 @@ import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
 import { getConnection } from "./client";
 import Decimal from "decimal.js";
 import BN from "bn.js";
+import { PDAUtil } from "@orca-so/whirlpools-sdk";
+import { PublicKey } from "@solana/web3.js";
 
 export const ACCOUNT_DEFINITION = {
   Mint: "https://github.com/solana-labs/solana-program-library/blob/master/token/program-2022/src/state.rs#L22",
@@ -68,6 +70,8 @@ export type TokenAccount2022Info = {
 
 type Mint2022DerivedInfo = {
   supply: Decimal,
+  metadataMetaplex: PublicKey,
+  metadataFluxbeam: PublicKey,
 }
 
 type Mint2022Extensions = {
@@ -154,12 +158,24 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
   };
 }
 
+const FLUXBEAM_METADATA_PROGRAM_ADDRESS = new PublicKey("META4s4fSmpkTbZoUsgC1oBnWB31vQcmnN8giPw51Zu");
 export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
 
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const mint = unpackMint(pubkey, accountInfo, TOKEN_2022_PROGRAM_ID);
+
+  // metaplex metadata
+  const metadataMetaplex = PDAUtil.getPositionMetadata(pubkey).publicKey;
+  const metadataFluxbeam = AddressUtil.findProgramAddress(
+    [
+      Buffer.from("metadata"),
+      FLUXBEAM_METADATA_PROGRAM_ADDRESS.toBuffer(),
+      pubkey.toBuffer(),
+    ],
+    FLUXBEAM_METADATA_PROGRAM_ADDRESS
+  ).publicKey;
 
   const transferFeeConfig = getTransferFeeConfig(mint);
   const mintCloseAuthority = getMintCloseAuthority(mint);
@@ -214,6 +230,8 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
     },
     derived: {
       supply: DecimalUtil.fromBN(new BN(mint.supply.toString()), mint.decimals),
+      metadataMetaplex,
+      metadataFluxbeam,
     }
   };
 }
