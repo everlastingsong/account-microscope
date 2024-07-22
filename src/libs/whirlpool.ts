@@ -14,7 +14,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
-const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512];
+const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
