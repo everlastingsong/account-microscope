@@ -77,9 +77,13 @@ async function cloneWhirlpoolImpl(whirlpoolInfo: WhirlpoolInfo, config: Whirlpoo
 
   // Neighborhood TickArrays, which are prone to change in trade, are obtained by gMA with guaranteed consistency.
   const neighborhoodTickArrayPubkeys = [-3, -2, -1, 0, +1, +2, +3].map((offset) => {
-    const startTickIndex = TickUtil.getStartTickIndex(parsed.tickCurrentIndex, parsed.tickSpacing, offset);
-    return PDAUtil.getTickArray(programId, meta.pubkey, startTickIndex).publicKey;
-  });
+    try {
+      const startTickIndex = TickUtil.getStartTickIndex(parsed.tickCurrentIndex, parsed.tickSpacing, offset);
+      return [PDAUtil.getTickArray(programId, meta.pubkey, startTickIndex).publicKey];
+    } catch (e) {
+      return [];
+    }
+  }).flat();
 
   // addresses.length is obviously less than 100.
   const addresses = [
