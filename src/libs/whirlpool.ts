@@ -159,11 +159,15 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const tickArrayStartIndexes = [];
   const tickArrayPubkeys = [];
   for (let offset=-NEIGHBORING_TICK_ARRAY_NUM; offset <= NEIGHBORING_TICK_ARRAY_NUM; offset++) {
-    const startTickIndex = TickUtil.getStartTickIndex(whirlpoolData.tickCurrentIndex, whirlpoolData.tickSpacing, offset);
-    if ( startTickIndex+ticksInArray <= MIN_TICK_INDEX ) continue;
-    if ( startTickIndex > MAX_TICK_INDEX ) continue;
-    tickArrayStartIndexes.push(startTickIndex);
-    tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, pubkey, startTickIndex).publicKey);
+    try {
+      const startTickIndex = TickUtil.getStartTickIndex(whirlpoolData.tickCurrentIndex, whirlpoolData.tickSpacing, offset);
+      if ( startTickIndex+ticksInArray <= MIN_TICK_INDEX ) continue;
+      if ( startTickIndex > MAX_TICK_INDEX ) continue;
+      tickArrayStartIndexes.push(startTickIndex);
+      tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, pubkey, startTickIndex).publicKey);
+    } catch (e) {
+      // ignore
+    }
   }
   const tickArrays = await fetcher.getTickArrays(tickArrayPubkeys, IGNORE_CACHE);
   const neighboringTickArrays: NeighboringTickArray[] = [];
