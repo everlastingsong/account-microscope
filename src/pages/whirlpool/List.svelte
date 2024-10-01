@@ -13,6 +13,15 @@
   const orderByOptions = Object.values(OrderBy);
   let orderBy = orderByOptions.indexOf(OrderBy.volumeDesc);
 
+  enum PoolType {
+    all = "All",
+    concentrated = "Concentrated Only",
+    splash = "Splash Only",
+  }
+
+  const poolTypeOptions = Object.values(PoolType);
+  let poolType = poolTypeOptions.indexOf(PoolType.all);
+
   function getComparator(orderBy: number): (a: WhirlpoolListEntry, b: WhirlpoolListEntry) => number {
     switch (orderByOptions[orderBy]) {
       case OrderBy.volumeDesc:
@@ -30,9 +39,20 @@
     }
   }
 
+  function getPoolTypeFilter(poolType: number): (ts: number) => boolean {
+    switch (poolTypeOptions[poolType]) {
+      case PoolType.concentrated:
+        return (ts) => ts < 32768;
+      case PoolType.splash:
+        return (ts) => ts >= 32768;
+      default:
+        return (ts) => true;
+    }
+  }
+
   let filter;
   $: effectiveFilter = "";
-  $: whirlpoolListPromise = getFilteredWhirlpoolList(effectiveFilter, getComparator(orderBy));
+  $: whirlpoolListPromise = getFilteredWhirlpoolList(effectiveFilter, getPoolTypeFilter(poolType), getComparator(orderBy));
 
   function onSubmit() {
     effectiveFilter = filter;
@@ -40,10 +60,12 @@
 
   async function getFilteredWhirlpoolList(
     filter: string,
+    poolTypeFilter: (ts: number) => boolean,
     orderByComparator: (a: WhirlpoolListEntry, b: WhirlpoolListEntry) => number,
   ): Promise<WhirlpoolListEntry[]> {
     const list = await getWhirlpoolList();
     return list
+      .filter((p) => poolTypeFilter(p.tickSpacing))
       .filter(
         (p) => filter.length == 0 ||
         p.name.toUpperCase().indexOf(filter.toUpperCase()) >= 0 ||
@@ -60,6 +82,16 @@
   <input style="margin: 0.5em 0em;" bind:value={filter} type="text" size="64" placeholder="SOL/USDC or orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE" />
   <input type="submit" value="Set Filter!" />
 </form>
+<div style="margin-top: 0.5em; margin-left: 0em; margin-bottom: 1.0em; font-size: smaller; display: flex; flex-direction: row;">
+  <div>pool type</div>
+  <div>
+  <InputRadioGroup
+    group="poolType"
+    bind:selected={poolType}
+    values={poolTypeOptions}
+  />
+  </div>
+</div>
 <div style="margin-top: 0.5em; margin-left: 0em; margin-bottom: 1.0em; font-size: smaller; display: flex; flex-direction: row;">
   <div>order by</div>
   <div>
