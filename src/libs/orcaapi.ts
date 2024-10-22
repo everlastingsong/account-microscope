@@ -5,7 +5,7 @@ import moment from "moment";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getShortAddressNotation } from "./utils";
 
-const V1_WHIRLPOOL_LIST = "https://api.mainnet.orca.so/v1/whirlpool/list";
+const STATS_API_WHIRLPOOL_LIST = "https://stats-api-eclipse.mainnet-production.orca.so/api/whirlpools?limit=1000&sort=volume:desc";
 
 export type WhirlpoolListEntry = {
   address: PublicKey,
@@ -39,12 +39,14 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
     return _cachedWhirlpoolList;
   }
 
-  const response = await (await fetch(V1_WHIRLPOOL_LIST)).json();
+  const tokenList = await getTokenList();
+  const response = await (await fetch(STATS_API_WHIRLPOOL_LIST)).json();
 
   const list: WhirlpoolListEntry[] = [];
-  response.whirlpools.forEach((p) => {
-    const symbolA = warnUndefined(p.tokenA.symbol, p.tokenA.mint);
-    const symbolB = warnUndefined(p.tokenB.symbol, p.tokenB.mint);
+  response.data.forEach((p) => {
+
+    const symbolA = warnUndefined(tokenList.getTokenInfoByMint(p.tokenMintA)?.symbol, p.tokenMintA);
+    const symbolB = warnUndefined(tokenList.getTokenInfoByMint(p.tokenMintB)?.symbol, p.tokenMintB);
 
     list.push({
       address: new PublicKey(p.address),
@@ -52,12 +54,12 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
       invertedName: `${symbolB}/${symbolA}(${p.tickSpacing})`,
       symbolA,
       symbolB,
-      mintA: new PublicKey(p.tokenA.mint),
-      mintB: new PublicKey(p.tokenB.mint),
+      mintA: new PublicKey(p.tokenMintA),
+      mintB: new PublicKey(p.tokenMintB),
       tickSpacing: p.tickSpacing,
       price: new Decimal(p.price),
-      usdTVL: new Decimal(p.tvl ?? 0),
-      usdVolumeDay: new Decimal(p.volume?.day ?? 0),
+      usdTVL: new Decimal(p.tvlUsdc ?? 0),
+      usdVolumeDay: new Decimal(p.volumeUsdc24h ?? 0),
     });
   });
 
@@ -71,7 +73,7 @@ export async function getWhirlpoolList(): Promise<WhirlpoolListEntry[]> {
 }
 
 
-const V1_TOKEN_LIST = "https://api.mainnet.orca.so/v1/token/list";
+const STATS_API_TOKEN_LIST = "https://stats-api-eclipse.mainnet-production.orca.so/api/tokens?limit=3000";
 
 export type TokenInfo = {
   mint: PublicKey,
@@ -105,19 +107,19 @@ let _cachedTokenList: TokenList = null;
 export async function getTokenList(): Promise<TokenList> {
   if (_cachedTokenList) return _cachedTokenList;
 
-  const response = await (await fetch(V1_TOKEN_LIST)).json();
+  const response = await (await fetch(STATS_API_TOKEN_LIST)).json();
 
   const list: TokenInfo[] = [];
-  response.tokens.forEach((t) => {
+  response.data.forEach((t) => {
     list.push({
-      mint: new PublicKey(t.mint),
-      symbol: warnUndefined(t.symbol, t.mint),
-      name: warnUndefined(t.name, t.mint),
+      mint: new PublicKey(t.address),
+      symbol: warnUndefined(t.metadata.symbol, t.address),
+      name: warnUndefined(t.metadata.name, t.address),
       decimals: t.decimals,
-      logoURI: t.logoURI,
-      coingeckoId: t.coingeckoId,
-      whitelisted: t.whitelisted,
-      poolToken: t.poolToken,
+      logoURI: t.metadata.image,
+      coingeckoId: undefined,
+      whitelisted: (t.metadata.risk ?? 3) < 3,
+      poolToken: false,
     });
   });
 
@@ -126,7 +128,6 @@ export async function getTokenList(): Promise<TokenList> {
   _cachedTokenList = new TokenList(list);
   return _cachedTokenList;
 }
-
 
 const POOL_CONFIG = "https://api.orca.so/configs";
 
