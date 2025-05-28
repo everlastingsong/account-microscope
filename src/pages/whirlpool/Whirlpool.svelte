@@ -124,7 +124,7 @@
     </table>  
   </Data>
   <Data name="reward last updated timestamp">{whirlpoolInfo.derived.rewardLastUpdatedTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
-  <Data name="oracle"><Pubkey address={whirlpoolInfo.derived.oracle} /></Data>
+  <Data name="oracle"><Pubkey type="whirlpool/oracle" address={whirlpoolInfo.derived.oracle} /></Data>
   <Data name="tick arrays for full range">
     <table style="border-spacing: 0;">
     <thead><th>initialized</th><th>start tick</th><th>pubkey</th></thead>

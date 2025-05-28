@@ -15,6 +15,14 @@ import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
+const ADAPTIVE_FEE_TIER_INDEXES = [
+  1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034,
+  1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044,
+  1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054,
+  1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064,
+  1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074,
+  1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084,
+]
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
@@ -541,16 +549,25 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
 }
 
 type InitializedFeeTier = {
-  isInitialized: boolean,
   tickSpacing: number,
-  defaultFeeRate: Decimal,
   pubkey: PublicKey,
+  isInitialized: boolean,
+  defaultFeeRate?: Decimal,
+}
+
+type InitializedAdaptiveFeeTier = {
+  feeTierIndex: number,
+  pubkey: PublicKey,
+  isInitialized: boolean,
+  tickSpacing?: number,
+  defaultBaseFeeRate?: Decimal,
 }
 
 type WhirlpoolsConfigDerivedInfo = {
   defaultProtocolFeeRate: Decimal,
   configExtension: PublicKey,
   feeTiers: InitializedFeeTier[],
+  adaptiveFeeTiers: InitializedAdaptiveFeeTier[],
 }
 
 type WhirlpoolsConfigInfo = {
@@ -588,6 +605,22 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
     });
   });
 
+  const adaptiveFeeTierPubkeys: PublicKey[] = ADAPTIVE_FEE_TIER_INDEXES.map((feeTierIndex) => {
+    return PDAUtil.getFeeTier(accountInfo.owner, pubkey, feeTierIndex).publicKey;
+  });
+
+  const adaptiveFeeTierAccountInfos = await connection.getMultipleAccountsInfo(adaptiveFeeTierPubkeys);
+  const adaptiveFeeTiers: InitializedAdaptiveFeeTier[] = [];
+  adaptiveFeeTierAccountInfos.forEach((a, i) => {
+    const adaptiveFeeTier = ParsableAdaptiveFeeTier.parse(adaptiveFeeTierPubkeys[i], a);
+    adaptiveFeeTiers.push({
+      feeTierIndex: ADAPTIVE_FEE_TIER_INDEXES[i],
+      pubkey: adaptiveFeeTierPubkeys[i],
+      isInitialized: adaptiveFeeTier !== null,
+      tickSpacing: adaptiveFeeTier === null ? undefined : adaptiveFeeTier.tickSpacing,
+      defaultBaseFeeRate: adaptiveFeeTier === null ? undefined : PoolUtil.getFeeRate(adaptiveFeeTier.defaultBaseFeeRate).toDecimal().mul(100),
+    });
+  });
   const configExtension = PDAUtil.getConfigExtension(accountInfo.owner, pubkey).publicKey;
 
   return {
@@ -597,6 +630,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
       defaultProtocolFeeRate: PoolUtil.getProtocolFeeRate(whirlpoolsConfigData.defaultProtocolFeeRate).toDecimal().mul(100),
       configExtension,
       feeTiers,
+      adaptiveFeeTiers,
     }
   };
 }
@@ -732,6 +766,7 @@ export async function getAdaptiveFeeTierInfo(addr: Address): Promise<AdaptiveFee
 }
 
 type OracleDerivedInfo = {
+  tradeEnableTimestamp: moment.Moment,
 }
 
 type OracleInfo = {
@@ -750,7 +785,9 @@ export async function getOracleInfo(addr: Address): Promise<OracleInfo> {
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: oracleData,
-    derived: {},
+    derived: {
+      tradeEnableTimestamp: moment.unix(oracleData.tradeEnableTimestamp.toNumber()),
+    },
   };
 }
 
