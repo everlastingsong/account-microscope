@@ -34,7 +34,7 @@ import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
 import { getConnection } from "./client";
 import Decimal from "decimal.js";
 import BN from "bn.js";
-import { PDAUtil } from "@orca-so/whirlpools-sdk";
+import { ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG, ParsableTokenBadge, PDAUtil } from "@orca-so/whirlpools-sdk";
 import { PublicKey } from "@solana/web3.js";
 
 export const ACCOUNT_DEFINITION = {
@@ -72,6 +72,8 @@ type Mint2022DerivedInfo = {
   supply: Decimal,
   metadataMetaplex: PublicKey,
   metadataFluxbeam: PublicKey,
+  isTokenBadgeInitialized: boolean,
+  tokenBadge: PublicKey,
 }
 
 type Mint2022Extensions = {
@@ -211,6 +213,16 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
     }
   });
 
+  // TokenBadge
+  const tokenBadge = PDAUtil.getTokenBadge(
+    ORCA_WHIRLPOOL_PROGRAM_ID,
+    ORCA_WHIRLPOOLS_CONFIG,
+    pubkey,
+  ).publicKey;
+  const tokenBadgeAccountInfo = await getAccountInfo(connection, tokenBadge);
+  const tokenBadgeData = ParsableTokenBadge.parse(tokenBadge, tokenBadgeAccountInfo.accountInfo);
+  const isTokenBadgeInitialized = !!tokenBadgeData;
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: {
@@ -232,6 +244,8 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
       supply: DecimalUtil.fromBN(new BN(mint.supply.toString()), mint.decimals),
       metadataMetaplex,
       metadataFluxbeam,
+      isTokenBadgeInitialized,
+      tokenBadge,
     }
   };
 }

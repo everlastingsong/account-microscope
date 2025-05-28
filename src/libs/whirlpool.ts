@@ -1,5 +1,5 @@
 import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE, WhirlpoolsConfigExtensionData, ParsableWhirlpoolsConfigExtension, TokenBadgeData, ParsableTokenBadge } from "@orca-so/whirlpools-sdk";
+import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE, WhirlpoolsConfigExtensionData, ParsableWhirlpoolsConfigExtension, TokenBadgeData, ParsableTokenBadge, LockConfigData, ParsableLockConfig, AdaptiveFeeTierData, ParsableAdaptiveFeeTier, ParsableOracle, OracleData } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
 import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
@@ -25,6 +25,9 @@ export const ACCOUNT_DEFINITION = {
   PositionBundle: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position_bundle.rs#L9",
   WhirlpoolsConfigExtension: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/config_extension.rs#L11",
   TokenBadge: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/token_badge.rs#L5",
+  LockConfig: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/lock_config.rs#L4",
+  AdaptiveFeeTier: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/adaptive_fee_tier.rs#L9",
+  Oracle: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/oracle.rs#L256",
 }
 
 export type TokenProgram = "token" | "token-2022";
@@ -60,6 +63,8 @@ type IsotopeWhirlpool = {
 }
 
 type WhirlpoolDerivedInfo = {
+  feeTierIndex: number,
+  adaptiveFeeEnabled: boolean,
   price: Decimal,
   invertedPrice: Decimal,
   feeRate: Decimal,
@@ -229,6 +234,10 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   // get oracle
   const oracle = PDAUtil.getOracle(accountInfo.owner, pubkey).publicKey;
 
+  // get fee tier index
+  const feeTierIndex = PoolUtil.getFeeTierIndex(whirlpoolData);
+  const adaptiveFeeEnabled = PoolUtil.isInitializedWithAdaptiveFee(whirlpoolData);
+
   let tradableAmounts: TradableAmounts = { downward: [], upward: [], error: true };
   try {
     const calculated = listTradableAmounts(
@@ -259,6 +268,8 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: whirlpoolData,
     derived: {
+      feeTierIndex,
+      adaptiveFeeEnabled,
       price: toFixedDecimal(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB), decimalsB),
       invertedPrice: toFixedDecimal(new Decimal(1).div(PriceMath.sqrtPriceX64ToPrice(whirlpoolData.sqrtPrice, decimalsA, decimalsB)), decimalsA),
       feeRate: PoolUtil.getFeeRate(whirlpoolData.feeRate).toDecimal().mul(100),
@@ -351,6 +362,10 @@ type PositionDerivedInfo = {
   isFullRange: boolean,
   positionBundle?: PublicKey,
   positionMintSupply: number,
+  isTokenExtensionsBased: boolean,
+  isLocked: boolean,
+  lockConfig?: PublicKey,
+  lockConfigData?: LockConfigData,
 }
 
 export type PositionInfo = {
@@ -397,6 +412,8 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const tokenProgramR1 = toTokenProgram(mints.get(mintPubkeys[3].toBase58())?.tokenProgram);
   const tokenProgramR2 = toTokenProgram(mints.get(mintPubkeys[4].toBase58())?.tokenProgram);
   const positionMintSupply = Number((mints.get(mintPubkeys[5].toBase58()).supply as bigint).toString());
+
+  const positionMintTokenProgram = toTokenProgram(mints.get(mintPubkeys[5].toBase58()).tokenProgram);
 
   const priceLower = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickLowerIndex, decimalsA, decimalsB), decimalsB);
   const priceUpper = toFixedDecimal(PriceMath.tickIndexToPrice(positionData.tickUpperIndex, decimalsA, decimalsB), decimalsB);
@@ -459,6 +476,11 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const maxTickIndex = Math.floor(MAX_TICK_INDEX / whirlpoolData.tickSpacing) * whirlpoolData.tickSpacing;
   const isFullRange = positionData.tickLowerIndex === minTickIndex && positionData.tickUpperIndex === maxTickIndex;
 
+  const isTokenExtensionsBased = positionMintTokenProgram === "token-2022";
+  const lockConfig = isTokenExtensionsBased ? PDAUtil.getLockConfig(accountInfo.owner, pubkey).publicKey : undefined;
+  const lockConfigData = isTokenExtensionsBased ? await fetcher.getLockConfig(lockConfig, IGNORE_CACHE) : undefined;
+  const isLocked = !!lockConfigData;
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: positionData,
@@ -510,6 +532,10 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
       isFullRange,
       positionBundle: isBundledPosition ? derivedPositionBundleAddress : undefined,
       positionMintSupply,
+      isTokenExtensionsBased,
+      lockConfig,
+      isLocked,
+      lockConfigData: isLocked ? lockConfigData : undefined,
     }
   };
 }
@@ -650,6 +676,81 @@ export async function getFeeTierInfo(addr: Address): Promise<FeeTierInfo> {
     derived: {
       defaultFeeRate: PoolUtil.getFeeRate(feeTierData.defaultFeeRate).toDecimal().mul(100),
     }
+  };
+}
+
+type LockConfigDerivedInfo = {
+  lockedTimestamp: moment.Moment,
+}
+
+type LockConfigInfo = {
+  meta: AccountMetaInfo,
+  parsed: LockConfigData,
+  derived: LockConfigDerivedInfo,
+}
+
+export async function getLockConfigInfo(addr: Address): Promise<LockConfigInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
+  const lockConfigData = ParsableLockConfig.parse(pubkey, accountInfo);
+
+  return {
+    meta: toMeta(pubkey, accountInfo, slotContext),
+    parsed: lockConfigData,
+    derived: {
+      lockedTimestamp: moment.unix(lockConfigData.lockedTimestamp.toNumber()),
+    },
+  };
+}
+
+type AdaptiveFeeTierDerivedInfo = {
+  defaultBaseFeeRate: Decimal,
+}
+
+type AdaptiveFeeTierInfo = {
+  meta: AccountMetaInfo,
+  parsed: AdaptiveFeeTierData,
+  derived: AdaptiveFeeTierDerivedInfo,
+}
+
+export async function getAdaptiveFeeTierInfo(addr: Address): Promise<AdaptiveFeeTierInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
+  const adaptiveFeeTierData = ParsableAdaptiveFeeTier.parse(pubkey, accountInfo);
+
+  return {
+    meta: toMeta(pubkey, accountInfo, slotContext),
+    parsed: adaptiveFeeTierData,
+    derived: {
+      defaultBaseFeeRate: PoolUtil.getFeeRate(adaptiveFeeTierData.defaultBaseFeeRate).toDecimal().mul(100),
+    },
+  };
+}
+
+type OracleDerivedInfo = {
+}
+
+type OracleInfo = {
+  meta: AccountMetaInfo,
+  parsed: OracleData,
+  derived: OracleDerivedInfo,
+}
+
+export async function getOracleInfo(addr: Address): Promise<OracleInfo> {
+  const pubkey = AddressUtil.toPubKey(addr);
+  const connection = getConnection();
+
+  const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
+  const oracleData = ParsableOracle.parse(pubkey, accountInfo);
+
+  return {
+    meta: toMeta(pubkey, accountInfo, slotContext),
+    parsed: oracleData,
+    derived: {},
   };
 }
 

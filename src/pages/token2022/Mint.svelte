@@ -74,6 +74,8 @@
   <Data name="supply">{mintInfo.derived.supply}</Data>
   <Data name="metadata (metaplex)"><Pubkey address={mintInfo.derived.metadataMetaplex} /></Data>
   <Data name="metadata (fluxbeam)"><Pubkey address={mintInfo.derived.metadataFluxbeam} /></Data>
+  <Data name="isTokenBadgeInitialized">{mintInfo.derived.isTokenBadgeInitialized}</Data>
+  <Data name="tokenBadge"><Pubkey type="whirlpool/tokenbadge" address={mintInfo.derived.tokenBadge} /></Data>
 </DerivedData>
 
 <!--Laboratory>
