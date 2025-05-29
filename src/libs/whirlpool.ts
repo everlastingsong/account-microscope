@@ -767,6 +767,8 @@ export async function getAdaptiveFeeTierInfo(addr: Address): Promise<AdaptiveFee
 
 type OracleDerivedInfo = {
   tradeEnableTimestamp: moment.Moment,
+  lastReferenceUpdateTimestamp: moment.Moment,
+  lastMajorSwapTimestamp: moment.Moment,
 }
 
 type OracleInfo = {
@@ -787,6 +789,8 @@ export async function getOracleInfo(addr: Address): Promise<OracleInfo> {
     parsed: oracleData,
     derived: {
       tradeEnableTimestamp: moment.unix(oracleData.tradeEnableTimestamp.toNumber()),
+      lastReferenceUpdateTimestamp: moment.unix(oracleData.adaptiveFeeVariables.lastReferenceUpdateTimestamp.toNumber()),
+      lastMajorSwapTimestamp: moment.unix(oracleData.adaptiveFeeVariables.lastMajorSwapTimestamp.toNumber()),
     },
   };
 }

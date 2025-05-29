@@ -46,7 +46,9 @@
 </ParsedData>
 
 <DerivedData>
-  <Data name="trade enable timestamp">{info.derived.tradeEnableTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")} %</Data>
+  <Data name="trade enable timestamp">{info.derived.tradeEnableTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
+  <Data name="last reference update timestamp">{info.derived.lastReferenceUpdateTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
+  <Data name="last major swap timestamp">{info.derived.lastMajorSwapTimestamp.format("YYYY/MM/DD HH:mm:ss UTCZZ")}</Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}
