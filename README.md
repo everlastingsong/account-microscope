@@ -22,9 +22,12 @@ https://everlastingsong.github.io/account-microscope/#/whirlpool/list
 - WhirlpoolsConfigExtension
 - TokenBadge
 - FeeTier
+- AdaptiveFeeTier
 - Position
 - TickArray
 - PositionBundle
+- LockConfig
+- Oracle
 
 ### Orca Legacy Pool (Aquafarm)
 - TokenSwap
