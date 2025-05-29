@@ -31,7 +31,7 @@
     "@solana/web3.js": "^1.90.0",
     "@solana/spl-token": "^0.3.10",
     "@solana/spl-token-2022": "npm:@solana/spl-token@0.4.1",
-    "@orca-so/whirlpools-sdk": "0.13.0-alpha.0",
+    "@orca-so/whirlpools-sdk": "0.14.0",
     "@orca-so/common-sdk": "^0.6.0-alpha.1",
     "@coral-xyz/anchor": "^0.29.0",
     "@orca-so/aquafarm": "^0.0.12",

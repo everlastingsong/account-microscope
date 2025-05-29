@@ -22,9 +22,12 @@ https://everlastingsong.github.io/account-microscope/#/whirlpool/list
 - WhirlpoolsConfigExtension
 - TokenBadge
 - FeeTier
+- AdaptiveFeeTier
 - Position
 - TickArray
 - PositionBundle
+- LockConfig
+- Oracle
 
 ### Orca Legacy Pool (Aquafarm)
 - TokenSwap
@@ -62,3 +65,8 @@ You can download TokenProgram related accounts to mint an arbitrary amount of to
 It would be very helpful to get the tokens needed to trade in an environment cloned from the mainnet.
 
 <img width="1034" alt="screenshot 2023-08-13 10 30 28" src="https://github.com/everlastingsong/account-microscope/assets/109891005/10d04903-36aa-44e4-9699-7c8883861610">
+
+## TODO
+- Isotope whirlpools with fee tier index
+- Recognize newer token extensions
+- Add lock info on list positions

@@ -66,6 +66,11 @@
       <Pubkey type="whirlpool/positionbundle" address={positionInfo.derived.positionBundle} />
     </Data>
   {/if}
+  <Data name="is TokenExtensions based">{positionInfo.derived.isTokenExtensionsBased}</Data>
+  <Data name="is locked">{positionInfo.derived.isLocked}</Data>
+  {#if positionInfo.derived.isTokenExtensionsBased}
+    <Data name="lock config"><Pubkey type="whirlpool/lockconfig" address={positionInfo.derived.lockConfig} /></Data>
+  {/if}
   <Data name="is full range">{positionInfo.derived.isFullRange}</Data>
   <Data name="lower price">{positionInfo.derived.priceLower} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>
   <Data name="upper price">{positionInfo.derived.priceUpper} {price_unit_if_not_undefined(positionInfo.derived.tokenInfoA, positionInfo.derived.tokenInfoB)}</Data>

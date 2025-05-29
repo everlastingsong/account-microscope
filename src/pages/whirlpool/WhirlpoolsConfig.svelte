@@ -49,6 +49,22 @@
       </tbody>
       </table>  
   </Data>
+  <Data name="adaptive fee tiers">
+    <table style="border-spacing: 0;">
+      <thead><th>fee tier index</th><th>initialized</th><th>tick spacing</th><th>default base fee rate</th><th>pubkey</th></thead>
+      <tbody>
+      {#each configInfo.derived.adaptiveFeeTiers as feeTier}
+      <tr class="{feeTier.isInitialized ? "initialized" : "uninitialized"}">
+        <td>{feeTier.feeTierIndex}</td>
+        <td>{feeTier.isInitialized}</td>
+        <td>{feeTier.tickSpacing}</td>
+        <td>{feeTier.defaultBaseFeeRate === undefined ? undefined : feeTier.defaultBaseFeeRate + " %"}</td>
+        <td><Pubkey type="whirlpool/adaptivefeetier" address={feeTier.pubkey} short /></td>
+      </tr>
+      {/each}
+      </tbody>
+      </table>  
+  </Data>
 </DerivedData>
 </ParsedAndDerivedData>
 {/await}

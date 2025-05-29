@@ -8,6 +8,9 @@ import TokenBadge from "../pages/whirlpool/TokenBadge.svelte";
 import FeeTier from "../pages/whirlpool/FeeTier.svelte";
 import TickArray from "../pages/whirlpool/TickArray.svelte";
 import PositionBundle from "../pages/whirlpool/PositionBundle.svelte";
+import LockConfig from "../pages/whirlpool/LockConfig.svelte";
+import AdaptiveFeeTier from "../pages/whirlpool/AdaptiveFeeTier.svelte";
+import Oracle from "../pages/whirlpool/Oracle.svelte";
 import WhirlpoolList from "../pages/whirlpool/List.svelte";
 import PositionList from "../pages/whirlpool/ListPositions.svelte";
 
@@ -41,6 +44,9 @@ export const routes = {
   '/whirlpool/tickarray/:pubkey': TickArray,
   '/whirlpool/position/:pubkey': Position,
   '/whirlpool/positionbundle/:pubkey': PositionBundle,
+  '/whirlpool/lockconfig/:pubkey': LockConfig,
+  '/whirlpool/adaptivefeetier/:pubkey': AdaptiveFeeTier,
+  '/whirlpool/oracle/:pubkey': Oracle,
 
   '/token/account/:pubkey': TokenAccount,
   '/token/mint/:pubkey': TokenMint,
