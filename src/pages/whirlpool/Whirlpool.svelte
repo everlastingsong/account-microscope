@@ -63,6 +63,7 @@
   <Data name="whirlpoolsConfig" type="PublicKey" offset="8"><Pubkey type="whirlpool/config" address={whirlpoolInfo.parsed.whirlpoolsConfig} /></Data>
   <Data name="tokenMintA" type="PublicKey" offset="101"><TokenPubkey type={getTokenMintType(whirlpoolInfo.derived.tokenProgramA)} address={whirlpoolInfo.parsed.tokenMintA} program={whirlpoolInfo.derived.tokenProgramA} /></Data>
   <Data name="tokenMintB" type="PublicKey" offset="181"><TokenPubkey type={getTokenMintType(whirlpoolInfo.derived.tokenProgramB)} address={whirlpoolInfo.parsed.tokenMintB} program={whirlpoolInfo.derived.tokenProgramB} /></Data>
+  <Data name="feeTierIndexSeed" type="[u8; 2]" offset="43">[{whirlpoolInfo.parsed.feeTierIndexSeed[0]}, {whirlpoolInfo.parsed.feeTierIndexSeed[1]}]</Data>
   <Data name="tickSpacing" type="u16" offset="41">{whirlpoolInfo.parsed.tickSpacing}</Data>
   <Data name="liquidity" type="u128" offset="49">{whirlpoolInfo.parsed.liquidity}</Data>
   <Data name="tokenVaultA" type="PublicKey" offset="133"><TokenPubkey type={getTokenAccountType(whirlpoolInfo.derived.tokenProgramA)} address={whirlpoolInfo.parsed.tokenVaultA} program={whirlpoolInfo.derived.tokenProgramA} /></Data>
@@ -101,6 +102,8 @@
 </ParsedData>
 
 <DerivedData>
+  <Data name="is adaptive fee enabled">{whirlpoolInfo.derived.adaptiveFeeEnabled}</Data>
+  <Data name="fee tier index">{whirlpoolInfo.derived.feeTierIndex}</Data>
   <Data name="token program, decimals">
     <table style="border-spacing: 0;">
       <thead><th>token</th><th>program</th><th>decimals</th></thead>
