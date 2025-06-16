@@ -107,6 +107,7 @@
 
 <DerivedData>
   <Data name="type">{tickArrayInfo.derived.tickArrayType}</Data>
+  <Data name="initialized ticks">{tickArrayInfo.derived.numInitializedTicks} / 88</Data>
   <Data name="tick spacing">{tickArrayInfo.derived.tickSpacing}</Data>
   <Data name="ticks in array">{tickArrayInfo.derived.ticksInArray}</Data>
   <Data name="current tick index">{tickArrayInfo.derived.tickCurrentIndex}</Data>
