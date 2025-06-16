@@ -22,7 +22,9 @@ const ADAPTIVE_FEE_TIER_INDEXES = [
   1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064,
   1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074,
   1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084,
-]
+];
+
+const DYNAMIC_TICK_ARRAY_DISCRIMINATOR = [17, 216, 246, 142, 225, 199, 218, 56];
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
@@ -795,7 +797,10 @@ export async function getOracleInfo(addr: Address): Promise<OracleInfo> {
   };
 }
 
+type TickArrayType = "dynamic" | "fixed";
+
 type TickArrayDerivedInfo = {
+  tickArrayType: TickArrayType,
   prevTickArray: PublicKey,
   nextTickArray: PublicKey,
   tickCurrentIndex: number,
@@ -803,9 +808,14 @@ type TickArrayDerivedInfo = {
   ticksInArray: number,
 }
 
+type DynamicTickArrayTickBitmap = {
+  tickBitmap?: BN,
+  tickBitmapArray?: number[],
+}
+
 type TickArrayInfo = {
   meta: AccountMetaInfo,
-  parsed: TickArrayData,
+  parsed: TickArrayData & DynamicTickArrayTickBitmap,
   derived: TickArrayDerivedInfo,
 }
 
@@ -817,6 +827,15 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const tickArrayData = ParsableTickArray.parse(pubkey, accountInfo);
 
+  const isDynamic = isDynamicTickArray(accountInfo);
+
+  let tickBitmap: BN | undefined;
+  let tickBitmapArray: number[] | undefined;
+  if (isDynamic) {
+    tickBitmap = getTickBitmap(accountInfo);
+    tickBitmapArray = tickBitmap.toArray("le", 16);
+  }
+
   // get whirlpool
   const whirlpoolData = await fetcher.getPool(tickArrayData.whirlpool, IGNORE_CACHE);
 
@@ -826,8 +845,9 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
 
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
-    parsed: tickArrayData,
+    parsed: { ...tickArrayData, tickBitmap, tickBitmapArray },
     derived: {
+      tickArrayType: isDynamic ? "dynamic" : "fixed",
       prevTickArray: prevTickArrayPubkey,
       nextTickArray: nextTickArrayPubkey,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
@@ -835,6 +855,17 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
       ticksInArray,
     }
   };
+}
+
+export function isDynamicTickArray(accountInfo: AccountInfo<Buffer>): boolean {
+  return accountInfo.data.subarray(0, 8).equals(Buffer.from(DYNAMIC_TICK_ARRAY_DISCRIMINATOR));
+}
+
+function getTickBitmap(accountInfo: AccountInfo<Buffer>): BN {
+  const bitmapOffset = 8 + 4 + 32;
+  const bitmapLength = 16; // u128
+  const bitmapBuffer = accountInfo.data.subarray(bitmapOffset, bitmapOffset + bitmapLength);
+  return new BN(bitmapBuffer, "le");
 }
 
 type TradableAmount = {

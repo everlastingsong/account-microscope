@@ -23,6 +23,7 @@
 
 <ParsedAndDerivedData>
 <ParsedData>
+  {#if !tickArrayInfo.parsed.tickBitmap}
   <Data name="whirlpool" type="PublicKey" offset="9956"><Pubkey type="whirlpool/whirlpool" address={tickArrayInfo.parsed.whirlpool} /></Data>
   <Data name="startTickIndex" type="i32" offset="8">{tickArrayInfo.parsed.startTickIndex}</Data>
   <Data name="ticks" offset="12">
@@ -42,6 +43,47 @@
       </tbody>
     </table>  
   </Data>
+  {/if}
+
+  {#if !!tickArrayInfo.parsed.tickBitmap}
+  <Data name="whirlpool" type="PublicKey" offset="12"><Pubkey type="whirlpool/whirlpool" address={tickArrayInfo.parsed.whirlpool} /></Data>
+  <Data name="startTickIndex" type="i32" offset="8">{tickArrayInfo.parsed.startTickIndex}</Data>
+  <Data name="tickBitmap" type="u128" offset="44">
+    {tickArrayInfo.parsed.tickBitmap.toString()}
+    <br /><br />
+    <table style="border-spacing: 0;">
+      <thead><th>index</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></thead>
+      <tbody>
+      {#each tickArrayInfo.parsed.tickBitmapArray as row, index}
+      <tr>
+        <td>{index}</td>
+        {#each [0, 1, 2, 3, 4, 5, 6, 7].map((i) => (row & (1<<i)) > 0) as bit}
+        <td>{bit ? 1 : 0}</td>
+        {/each}
+      </tr>
+      {/each}
+      </tbody>
+    </table>
+  </Data>
+  <Data name="ticks" offset="60">
+    <table style="border-spacing: 0;">
+      <thead><th>offset</th><th>tick index</th><th>initialized</th><th>liquidity net</th></thead>
+      <tbody>
+      <tr><td colspan="4">A to B direction (price down)</td></tr>
+      {#each tickArrayInfo.parsed.ticks as tick, offset}
+      <tr class="{tick.initialized ? "initialized" : "uninitialized"}">
+        <td>{offset}</td>
+        <td>{tickArrayInfo.parsed.startTickIndex + offset*tickArrayInfo.derived.tickSpacing}</td>
+        <td>{tick.initialized}</td>
+        <td>{tick.liquidityNet}</td>
+      </tr>
+      {/each}
+      <tr><td colspan="4">B to A direction (price up)</td></tr>
+      </tbody>
+    </table>  
+  </Data>
+  {/if}
+
   <Data name="initialized ticks">
     {#each tickArrayInfo.parsed.ticks as tick, offset}
     {#if tick.initialized}
@@ -64,6 +106,7 @@
 </ParsedData>
 
 <DerivedData>
+  <Data name="type">{tickArrayInfo.derived.tickArrayType}</Data>
   <Data name="tick spacing">{tickArrayInfo.derived.tickSpacing}</Data>
   <Data name="ticks in array">{tickArrayInfo.derived.ticksInArray}</Data>
   <Data name="current tick index">{tickArrayInfo.derived.tickCurrentIndex}</Data>
