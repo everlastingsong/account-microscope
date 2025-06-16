@@ -150,7 +150,7 @@
     <tbody>
       {#each whirlpoolInfo.derived.fullRangeTickArrays as tickArray}
       <tr class="{tickArray.isInitialized ? "initialized" : "uninitialized"}">
-        <td>{tickArray.isInitialized}</td>
+        <td>{tickArray.isInitialized}{#if tickArray.isInitialized}{#if tickArray.isDynamic}&nbsp;(dynamic){:else}&nbsp;(fixed){/if}{/if}</td>
         <td>{tickArray.startTickIndex}</td>
         <td><Pubkey type="whirlpool/tickarray" address={tickArray.pubkey} short/></td>
       </tr>
@@ -167,7 +167,7 @@
     <!--tr class="{tickArray.hasTickCurrentIndex ? "current" : (tickArray.isInitialized ? "initialized" : "uninitialized")}"-->
     <tr class="{tickArray.isInitialized ? (tickArray.hasTickCurrentIndex ? "current" : "initialized") : "uninitialized"}">
       <td>{tickArray.hasTickCurrentIndex}{tickArray.hasTickCurrentIndex ? ` 📍(${whirlpoolInfo.parsed.tickCurrentIndex})` : ""}</td>
-      <td>{tickArray.isInitialized}</td>
+      <td>{tickArray.isInitialized}{#if tickArray.isInitialized}{#if tickArray.isDynamic}&nbsp;(dynamic){:else}&nbsp;(fixed){/if}{/if}</td>
       <td>{tickArray.startTickIndex}</td>
       <td>{tickArray.startPrice}</td>
       <td><Pubkey type="whirlpool/tickarray" address={tickArray.pubkey} short/></td>

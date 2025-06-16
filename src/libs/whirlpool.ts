@@ -1,4 +1,4 @@
-import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
+import { PublicKey, AccountInfo, GetProgramAccountsFilter, Connection } from "@solana/web3.js";
 import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE, WhirlpoolsConfigExtensionData, ParsableWhirlpoolsConfigExtension, TokenBadgeData, ParsableTokenBadge, LockConfigData, ParsableLockConfig, AdaptiveFeeTierData, ParsableAdaptiveFeeTier, ParsableOracle, OracleData } from "@orca-so/whirlpools-sdk";
 import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
@@ -22,7 +22,9 @@ const ADAPTIVE_FEE_TIER_INDEXES = [
   1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064,
   1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074,
   1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084,
-]
+];
+
+const DYNAMIC_TICK_ARRAY_DISCRIMINATOR = [17, 216, 246, 142, 225, 199, 218, 56];
 
 export const ACCOUNT_DEFINITION = {
   Whirlpool: "https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/whirlpool.rs#L14",
@@ -52,6 +54,7 @@ type NeighboringTickArray = {
   startTickIndex: number,
   startPrice: Decimal,
   isInitialized: boolean,
+  isDynamic: undefined | boolean,
   hasTickCurrentIndex: boolean,
 }
 
@@ -59,6 +62,7 @@ type FullRangeTickArray = {
   pubkey: PublicKey,
   startTickIndex: number,
   isInitialized: boolean,
+  isDynamic: undefined | boolean,
 }
 
 type IsotopeWhirlpool = {
@@ -182,7 +186,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       // ignore
     }
   }
-  const tickArrays = await fetcher.getTickArrays(tickArrayPubkeys, IGNORE_CACHE);
+  const tickArrays = await getTickArrays(connection, tickArrayPubkeys);
   const neighboringTickArrays: NeighboringTickArray[] = [];
   tickArrayStartIndexes.forEach((startTickIndex, i) => {
     neighboringTickArrays.push({
@@ -190,6 +194,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       startTickIndex,
       startPrice: toFixedDecimal(PriceMath.tickIndexToPrice(startTickIndex, decimalsA, decimalsB), decimalsB),
       isInitialized: !!tickArrays[i],
+      isDynamic: tickArrays[i]?.isDynamic,
       hasTickCurrentIndex: startTickIndex === currentStartTickIndex,
     });
   });
@@ -201,13 +206,13 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const maxStartTickIndex = TickUtil.getStartTickIndex(maxTickIndex, whirlpoolData.tickSpacing);
   const minTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, minStartTickIndex).publicKey;
   const maxTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, pubkey, maxStartTickIndex).publicKey;
-  const tickArraysForFullRange = await fetcher.getTickArrays([
+  const tickArraysForFullRange = await getTickArrays(connection, [
     minTickArrayPubkey,
     maxTickArrayPubkey,
-  ], IGNORE_CACHE);
+  ]);
   const fullRangeTickArrays: FullRangeTickArray[] = [
-    {pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0]},
-    {pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1]},
+    {pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0], isDynamic: tickArraysForFullRange[0]?.isDynamic },
+    {pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1], isDynamic: tickArraysForFullRange[1]?.isDynamic },
   ];
 
   // get isotope whirlpools
@@ -440,7 +445,7 @@ export async function getPositionInfo(addr: Address): Promise<PositionInfo> {
   const tickArrayPubkeys = [];
   tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, positionData.whirlpool, TickUtil.getStartTickIndex(positionData.tickLowerIndex, whirlpoolData.tickSpacing)).publicKey);
   tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, positionData.whirlpool, TickUtil.getStartTickIndex(positionData.tickUpperIndex, whirlpoolData.tickSpacing)).publicKey);
-  const tickArrays = await fetcher.getTickArrays(tickArrayPubkeys, IGNORE_CACHE);
+  const tickArrays = await getTickArrays(connection, tickArrayPubkeys);
   const tickLower = TickArrayUtil.getTickFromArray(tickArrays[0], positionData.tickLowerIndex, whirlpoolData.tickSpacing);
   const tickUpper = TickArrayUtil.getTickFromArray(tickArrays[1], positionData.tickUpperIndex, whirlpoolData.tickSpacing);
 
@@ -795,7 +800,11 @@ export async function getOracleInfo(addr: Address): Promise<OracleInfo> {
   };
 }
 
+type TickArrayType = "dynamic" | "fixed";
+
 type TickArrayDerivedInfo = {
+  tickArrayType: TickArrayType,
+  numInitializedTicks: number,
   prevTickArray: PublicKey,
   nextTickArray: PublicKey,
   tickCurrentIndex: number,
@@ -803,9 +812,14 @@ type TickArrayDerivedInfo = {
   ticksInArray: number,
 }
 
+type DynamicTickArrayTickBitmap = {
+  tickBitmap?: BN,
+  tickBitmapArray?: number[],
+}
+
 type TickArrayInfo = {
   meta: AccountMetaInfo,
-  parsed: TickArrayData,
+  parsed: TickArrayData & DynamicTickArrayTickBitmap,
   derived: TickArrayDerivedInfo,
 }
 
@@ -817,6 +831,15 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const tickArrayData = ParsableTickArray.parse(pubkey, accountInfo);
 
+  const isDynamic = isDynamicTickArray(accountInfo);
+
+  let tickBitmap: BN | undefined;
+  let tickBitmapArray: number[] | undefined;
+  if (isDynamic) {
+    tickBitmap = getTickBitmap(accountInfo);
+    tickBitmapArray = tickBitmap.toArray("le", 16);
+  }
+
   // get whirlpool
   const whirlpoolData = await fetcher.getPool(tickArrayData.whirlpool, IGNORE_CACHE);
 
@@ -824,10 +847,16 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
   const prevTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, tickArrayData.whirlpool, tickArrayData.startTickIndex - ticksInArray).publicKey;
   const nextTickArrayPubkey = PDAUtil.getTickArray(accountInfo.owner, tickArrayData.whirlpool, tickArrayData.startTickIndex + ticksInArray).publicKey;
 
+  const numInitializedTicks = tickArrayData.ticks.reduce((acc, tick) => {
+    return acc + (tick.initialized ? 1 : 0);
+  }, 0);
+
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
-    parsed: tickArrayData,
+    parsed: { ...tickArrayData, tickBitmap, tickBitmapArray },
     derived: {
+      tickArrayType: isDynamic ? "dynamic" : "fixed",
+      numInitializedTicks,
       prevTickArray: prevTickArrayPubkey,
       nextTickArray: nextTickArrayPubkey,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
@@ -835,6 +864,17 @@ export async function getTickArrayInfo(addr: Address): Promise<TickArrayInfo> {
       ticksInArray,
     }
   };
+}
+
+export function isDynamicTickArray(accountInfo: AccountInfo<Buffer>): boolean {
+  return accountInfo.data.subarray(0, 8).equals(Buffer.from(DYNAMIC_TICK_ARRAY_DISCRIMINATOR));
+}
+
+function getTickBitmap(accountInfo: AccountInfo<Buffer>): BN {
+  const bitmapOffset = 8 + 4 + 32;
+  const bitmapLength = 16; // u128
+  const bitmapBuffer = accountInfo.data.subarray(bitmapOffset, bitmapOffset + bitmapLength);
+  return new BN(bitmapBuffer, "le");
 }
 
 type TradableAmount = {
@@ -1370,4 +1410,22 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
       numStatusPriceIsBelowRangePositions,
     },
   };
+}
+
+type GetTickArrayResult = (TickArrayData & { isDynamic: boolean }) | null;
+
+async function getTickArrays(connection: Connection, pubkeys: PublicKey[]): Promise<GetTickArrayResult[]> {
+  const accountInfos = await connection.getMultipleAccountsInfo(pubkeys);
+  const tickArrays: GetTickArrayResult[] = [];
+  for (let i=0; i<accountInfos.length; i++) {
+    const accountInfo = accountInfos[i];
+    if (!accountInfo) {
+      tickArrays.push(null);
+      continue;
+    }
+    const isDynamic = isDynamicTickArray(accountInfo);
+    const tickArrayData = ParsableTickArray.parse(pubkeys[i], accountInfo);
+    tickArrays.push({ ...tickArrayData, isDynamic });
+  }
+  return tickArrays;
 }
