@@ -189,7 +189,7 @@
       <tr class="{!!tradableAmount.tickArrayData ? "initialized" : "uninitialized"}">
         <td>{tradableAmount.tickArrayStartPrice}</td>
         <td class="{!!tradableAmount.tickArrayData ? "amount buy" : "amount uninitbuy"}">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
-        <td class="amount">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
+        <td class="amount virtual">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
         <td><Pubkey type="whirlpool/tickarray" address={tradableAmount.tickArrayPubkey} short/></td>
       </tr>
       {/each}
@@ -197,7 +197,7 @@
       {#each whirlpoolInfo.derived.tickArrayTradableAmounts.downward as tradableAmount}
       <tr class="{!!tradableAmount.tickArrayData ? "initialized" : "uninitialized"}">
         <td>{tradableAmount.tickArrayStartPrice}</td>
-        <td class="amount">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
+        <td class="amount virtual">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
         <td class="{!!tradableAmount.tickArrayData ? "amount sell" : "amount uninitsell"}">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
         <td><Pubkey type="whirlpool/tickarray" address={tradableAmount.tickArrayPubkey} short/></td>
       </tr>
@@ -220,7 +220,7 @@
         <td>{tradableAmount.tickIndex}</td>
         <td>{tradableAmount.price}</td>
         <td class="amount buy">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
-        <td class="amount">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
+        <td class="amount virtual">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
       </tr>
       {/each}
 
@@ -228,7 +228,7 @@
       <tr>
         <td>{tradableAmount.tickIndex}</td>
         <td>{tradableAmount.price}</td>
-        <td class="amount">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
+        <td class="amount virtual">{tradableAmount.amountA.toFixed(whirlpoolInfo.derived.decimalsA)}</td>
         <td class="amount sell">{tradableAmount.amountB.toFixed(whirlpoolInfo.derived.decimalsB)}</td>
       </tr>
       {/each}
@@ -239,12 +239,13 @@
   </Data>
   <Data name="isotope whirlpools">
     <table style="border-spacing: 0;">
-      <thead><th>ts</th><th>fee</th><th>liquidity</th><th>tick</th><th>price</th><th>pubkey</th></thead>
+      <thead><th>fti</th><th>ts</th><th>fee</th><th>liquidity</th><th>tick</th><th>price</th><th>pubkey</th></thead>
       <tbody>
       {#each whirlpoolInfo.derived.isotopeWhirlpools as whirlpool}
       <tr>
+        <td>{whirlpool.feeTierIndex}</td>
         <td>{whirlpool.tickSpacing}</td>
-        <td>{whirlpool.feeRate} %</td>
+        <td>{whirlpool.feeRate} % {#if whirlpool.isAdaptiveFeeEnabled} + AF{/if}</td>
         <td>{whirlpool.liquidity}</td>
         <td>{whirlpool.tickCurrentIndex}</td>
         <td>{whirlpool.price}</td>
@@ -294,6 +295,10 @@
 
   .sell {
     background-color: lightblue;
+  }
+
+  .virtual {
+    color: #999999;
   }
 
   .uninitsell {

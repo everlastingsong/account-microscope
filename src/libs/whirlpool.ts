@@ -14,7 +14,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
-const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
+const STATIC_FEE_TIER_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
 const PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES = [
   1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034,
   1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044,
@@ -69,7 +69,9 @@ type FullRangeTickArray = {
 
 type IsotopeWhirlpool = {
   pubkey: PublicKey,
+  feeTierIndex: number,
   tickSpacing: number,
+  isAdaptiveFeeEnabled: boolean,
   feeRate: Decimal,
   tickCurrentIndex: number,
   price: Decimal,
@@ -219,24 +221,32 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
 
   // get isotope whirlpools
   const whirlpoolPubkeys: PublicKey[] = [];
-  ISOTOPE_TICK_SPACINGS.forEach((tickSpacing) => {
+  const isotopeWhirlpoolFeeTierIndexes = [
+    ...STATIC_FEE_TIER_TICK_SPACINGS,
+    ...PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES,
+    ...PERMISSIONED_ADAPTIVE_FEE_TIER_INDEXES,
+  ];
+
+  isotopeWhirlpoolFeeTierIndexes.forEach((feeTierIndex) => {
     whirlpoolPubkeys.push(
       PDAUtil.getWhirlpool(
         accountInfo.owner,
         whirlpoolData.whirlpoolsConfig,
         whirlpoolData.tokenMintA,
         whirlpoolData.tokenMintB,
-        tickSpacing,
+        feeTierIndex,
       ).publicKey
     );
   });
   const whirlpools = await fetcher.getPools(whirlpoolPubkeys, IGNORE_CACHE);
   const isotopeWhirlpools: IsotopeWhirlpool[] = [];
-  ISOTOPE_TICK_SPACINGS.forEach((tickSpacing, i) => {
+  isotopeWhirlpoolFeeTierIndexes.forEach((feeTierIndex, i) => {
     const whirlpool = whirlpools.get(whirlpoolPubkeys[i].toBase58());
     if (whirlpool) {
       isotopeWhirlpools.push({
-        tickSpacing,
+        feeTierIndex,
+        tickSpacing: whirlpool.tickSpacing,
+        isAdaptiveFeeEnabled: PoolUtil.isInitializedWithAdaptiveFee(whirlpool),
         feeRate: PoolUtil.getFeeRate(whirlpool.feeRate).toDecimal().mul(100),
         pubkey: whirlpoolPubkeys[i],
         tickCurrentIndex: whirlpool.tickCurrentIndex,
@@ -591,7 +601,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(pubkey, accountInfo);
 
-  const tickSpacingSet: Set<number> = new Set(ISOTOPE_TICK_SPACINGS);
+  const tickSpacingSet: Set<number> = new Set(STATIC_FEE_TIER_TICK_SPACINGS);
   for (let tickSpacing=1; tickSpacing < 2**16; tickSpacing *= 2) {
     tickSpacingSet.add(tickSpacing);
   }

@@ -10,6 +10,7 @@
   <li>Whirlpool / TickArray</li>
   <li>Whirlpool / PositionBundle</li>
   <li>Whirlpool / LockConfig</li>
+  <li>Whirlpool / Oracle</li>
   <li>Token / Mint</li>
   <li>Token / Account</li>
   <li>Token2022 / Mint</li>
