@@ -1,7 +1,7 @@
 a.svelte-1ugqnji{color:#39f;text-decoration:none}
 .col.svelte-gqivmw{display:flex;flex-direction:row;gap:200px}
 td.svelte-hnlsv{padding-top:5px;padding-bottom:5px}
-tr.current.svelte-1jz58vl{background-color:#cfc;border:1px solid black}tr.uninitialized.svelte-1jz58vl{background-color:lightgray}th.svelte-1jz58vl,td.svelte-1jz58vl{padding:0.1em 0.5em}.amount.svelte-1jz58vl{text-align:right}.buy.svelte-1jz58vl{background-color:lightpink}.uninitbuy.svelte-1jz58vl{background-color:#996666}.sell.svelte-1jz58vl{background-color:lightblue}.uninitsell.svelte-1jz58vl{background-color:#666699}
+tr.current.svelte-1uvvsaj{background-color:#cfc;border:1px solid black}tr.uninitialized.svelte-1uvvsaj{background-color:lightgray}th.svelte-1uvvsaj,td.svelte-1uvvsaj{padding:0.1em 0.5em}.amount.svelte-1uvvsaj{text-align:right}.buy.svelte-1uvvsaj{background-color:lightpink}.uninitbuy.svelte-1uvvsaj{background-color:#996666}.sell.svelte-1uvvsaj{background-color:lightblue}.virtual.svelte-1uvvsaj{color:#999999}.uninitsell.svelte-1uvvsaj{background-color:#666699}
 div.virtual-tick-index.svelte-yq7s2w.svelte-yq7s2w{display:flex;flex-direction:column;flex-wrap:nowrap;margin:0.5em 0em}table.simulated.svelte-yq7s2w td.svelte-yq7s2w{padding-top:0.5em}table.simulated.svelte-yq7s2w th.svelte-yq7s2w{padding-top:0.5em;padding-right:1em}
 th.svelte-6eiq7d,td.svelte-6eiq7d{padding:0.1em 0.5em}
 tr.uninitialized.svelte-v6w8v6{background-color:lightgray}th.svelte-v6w8v6,td.svelte-v6w8v6{padding:0.1em 0.5em}
@@ -13,9 +13,5 @@ td.svelte-1psl6r7,th.svelte-1psl6r7{padding-top:5px;padding-bottom:5px}th.svelte
 td.svelte-1psl6r7,th.svelte-1psl6r7{padding-top:5px;padding-bottom:5px}th.svelte-1psl6r7{padding-right:10px}
 th.svelte-obrh24{min-width:50px;padding-right:10px}
 div.ata.svelte-1svwzlo{margin-top:1em}
-th.svelte-1i4wn2p,td.svelte-1i4wn2p{padding:0.1em 0.5em}
-th.svelte-1g2uvcu,td.svelte-1g2uvcu{padding:0.1em 0.5em}a.svelte-1g2uvcu{color:#39f;text-decoration:none}
-th.svelte-1i4wn2p,td.svelte-1i4wn2p{padding:0.1em 0.5em}
-th.svelte-1i4wn2p,td.svelte-1i4wn2p{padding:0.1em 0.5em}
 th.svelte-13rs43s,td.svelte-13rs43s{padding:0.1em 0.5em;white-space:nowrap}div.byte.svelte-13rs43s{border:1px solid white}div.byte.svelte-13rs43s:hover{border:1px solid black}div.selected.svelte-13rs43s{background-color:#f86368}div.within8.svelte-13rs43s{background-color:#ffabaf}div.within16.svelte-13rs43s{background-color:#f2d675}div.within32.svelte-13rs43s{background-color:#c3c4c7}
 main.svelte-dgluc6{text-align:left;padding:0.2em 0.2em;max-width:240px;margin:0 auto}@media(min-width: 640px){main.svelte-dgluc6{max-width:none}}

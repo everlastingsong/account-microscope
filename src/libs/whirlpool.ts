@@ -11,17 +11,19 @@ import Decimal from "decimal.js";
 import moment from "moment";
 import { TokenExtensionUtil } from "@orca-so/whirlpools-sdk/dist/utils/public/token-extension-util";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
-const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
-const ADAPTIVE_FEE_TIER_INDEXES = [
+const STATIC_FEE_TIER_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
+const PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES = [
   1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034,
   1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044,
   1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054,
-  1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064,
-  1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074,
-  1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084,
+];
+const PERMISSIONED_ADAPTIVE_FEE_TIER_INDEXES = [
+  2049, 2050, 2051, 2052, 2053, 2054, 2055, 2056, 2057, 2058,
+  2059, 2060, 2061, 2062, 2063, 2064, 2065, 2066, 2067, 2068,
+  2069, 2070, 2071, 2072, 2073, 2074, 2075, 2076, 2077, 2078,
 ];
 
 const DYNAMIC_TICK_ARRAY_DISCRIMINATOR = [17, 216, 246, 142, 225, 199, 218, 56];
@@ -67,7 +69,9 @@ type FullRangeTickArray = {
 
 type IsotopeWhirlpool = {
   pubkey: PublicKey,
+  feeTierIndex: number,
   tickSpacing: number,
+  isAdaptiveFeeEnabled: boolean,
   feeRate: Decimal,
   tickCurrentIndex: number,
   price: Decimal,
@@ -217,24 +221,32 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
 
   // get isotope whirlpools
   const whirlpoolPubkeys: PublicKey[] = [];
-  ISOTOPE_TICK_SPACINGS.forEach((tickSpacing) => {
+  const isotopeWhirlpoolFeeTierIndexes = [
+    ...STATIC_FEE_TIER_TICK_SPACINGS,
+    ...PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES,
+    ...PERMISSIONED_ADAPTIVE_FEE_TIER_INDEXES,
+  ];
+
+  isotopeWhirlpoolFeeTierIndexes.forEach((feeTierIndex) => {
     whirlpoolPubkeys.push(
       PDAUtil.getWhirlpool(
         accountInfo.owner,
         whirlpoolData.whirlpoolsConfig,
         whirlpoolData.tokenMintA,
         whirlpoolData.tokenMintB,
-        tickSpacing,
+        feeTierIndex,
       ).publicKey
     );
   });
   const whirlpools = await fetcher.getPools(whirlpoolPubkeys, IGNORE_CACHE);
   const isotopeWhirlpools: IsotopeWhirlpool[] = [];
-  ISOTOPE_TICK_SPACINGS.forEach((tickSpacing, i) => {
+  isotopeWhirlpoolFeeTierIndexes.forEach((feeTierIndex, i) => {
     const whirlpool = whirlpools.get(whirlpoolPubkeys[i].toBase58());
     if (whirlpool) {
       isotopeWhirlpools.push({
-        tickSpacing,
+        feeTierIndex,
+        tickSpacing: whirlpool.tickSpacing,
+        isAdaptiveFeeEnabled: PoolUtil.isInitializedWithAdaptiveFee(whirlpool),
         feeRate: PoolUtil.getFeeRate(whirlpool.feeRate).toDecimal().mul(100),
         pubkey: whirlpoolPubkeys[i],
         tickCurrentIndex: whirlpool.tickCurrentIndex,
@@ -302,11 +314,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       tokenInfoR0,
       tokenInfoR1,
       tokenInfoR2,
-      tokenVaultAAmount: DecimalUtil.fromBN(vaults[0].amount, decimalsA),
-      tokenVaultBAmount: DecimalUtil.fromBN(vaults[1].amount, decimalsB),
-      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(vaults[2].amount, decimalsR0),
-      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(vaults[3].amount, decimalsR1),
-      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(vaults[4].amount, decimalsR2),
+      tokenVaultAAmount: DecimalUtil.fromBN(new BN(vaults[0].amount.toString()), decimalsA),
+      tokenVaultBAmount: DecimalUtil.fromBN(new BN(vaults[1].amount.toString()), decimalsB),
+      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[2].amount.toString()), decimalsR0),
+      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[3].amount.toString()), decimalsR1),
+      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[4].amount.toString()), decimalsR2),
       reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR0),
       reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
       reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),
@@ -572,7 +584,8 @@ type WhirlpoolsConfigDerivedInfo = {
   defaultProtocolFeeRate: Decimal,
   configExtension: PublicKey,
   feeTiers: InitializedFeeTier[],
-  adaptiveFeeTiers: InitializedAdaptiveFeeTier[],
+  adaptiveFeeTiersPermissionless: InitializedAdaptiveFeeTier[],
+  adaptiveFeeTiersPermissioned: InitializedAdaptiveFeeTier[],
 }
 
 type WhirlpoolsConfigInfo = {
@@ -588,7 +601,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const { accountInfo, slotContext } = await getAccountInfo(connection, pubkey);
   const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(pubkey, accountInfo);
 
-  const tickSpacingSet: Set<number> = new Set(ISOTOPE_TICK_SPACINGS);
+  const tickSpacingSet: Set<number> = new Set(STATIC_FEE_TIER_TICK_SPACINGS);
   for (let tickSpacing=1; tickSpacing < 2**16; tickSpacing *= 2) {
     tickSpacingSet.add(tickSpacing);
   }
@@ -610,21 +623,42 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
     });
   });
 
-  const adaptiveFeeTierPubkeys: PublicKey[] = ADAPTIVE_FEE_TIER_INDEXES.map((feeTierIndex) => {
+  const adaptiveFeeTierPubkeys: PublicKey[] = [
+    ...PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES,
+    ...PERMISSIONED_ADAPTIVE_FEE_TIER_INDEXES,
+  ].map((feeTierIndex) => {
     return PDAUtil.getFeeTier(accountInfo.owner, pubkey, feeTierIndex).publicKey;
   });
 
   const adaptiveFeeTierAccountInfos = await connection.getMultipleAccountsInfo(adaptiveFeeTierPubkeys);
-  const adaptiveFeeTiers: InitializedAdaptiveFeeTier[] = [];
+  const adaptiveFeeTiersPermissionless: InitializedAdaptiveFeeTier[] = [];
+  const adaptiveFeeTiersPermissioned: InitializedAdaptiveFeeTier[] = [];
   adaptiveFeeTierAccountInfos.forEach((a, i) => {
     const adaptiveFeeTier = ParsableAdaptiveFeeTier.parse(adaptiveFeeTierPubkeys[i], a);
-    adaptiveFeeTiers.push({
-      feeTierIndex: ADAPTIVE_FEE_TIER_INDEXES[i],
-      pubkey: adaptiveFeeTierPubkeys[i],
-      isInitialized: adaptiveFeeTier !== null,
-      tickSpacing: adaptiveFeeTier === null ? undefined : adaptiveFeeTier.tickSpacing,
-      defaultBaseFeeRate: adaptiveFeeTier === null ? undefined : PoolUtil.getFeeRate(adaptiveFeeTier.defaultBaseFeeRate).toDecimal().mul(100),
-    });
+
+    const pubkey = adaptiveFeeTierPubkeys[i];
+    const isInitialized = adaptiveFeeTier !== null;
+    const tickSpacing = adaptiveFeeTier === null ? undefined : adaptiveFeeTier.tickSpacing;
+    const defaultBaseFeeRate = adaptiveFeeTier === null ? undefined : PoolUtil.getFeeRate(adaptiveFeeTier.defaultBaseFeeRate).toDecimal().mul(100);
+
+    if (i < PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES.length) {
+      adaptiveFeeTiersPermissionless.push({
+        feeTierIndex: PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES[i],
+        pubkey,
+        isInitialized,
+        tickSpacing,
+        defaultBaseFeeRate,
+      });
+    }
+    else {
+      adaptiveFeeTiersPermissioned.push({
+        feeTierIndex: PERMISSIONED_ADAPTIVE_FEE_TIER_INDEXES[i - PERMISSIONLESS_ADAPTIVE_FEE_TIER_INDEXES.length],
+        pubkey,
+        isInitialized,
+        tickSpacing,
+        defaultBaseFeeRate,
+      });
+    }
   });
   const configExtension = PDAUtil.getConfigExtension(accountInfo.owner, pubkey).publicKey;
 
@@ -635,7 +669,8 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
       defaultProtocolFeeRate: PoolUtil.getProtocolFeeRate(whirlpoolsConfigData.defaultProtocolFeeRate).toDecimal().mul(100),
       configExtension,
       feeTiers,
-      adaptiveFeeTiers,
+      adaptiveFeeTiersPermissionless,
+      adaptiveFeeTiersPermissioned,
     }
   };
 }

@@ -28,7 +28,17 @@ import {
   getCpiGuard, CpiGuard,
   getNonTransferableAccount, NonTransferableAccount,
   getTransferHookAccount, TransferHookAccount,
-} from "@solana/spl-token-2022";
+  getPausableConfig,
+  getScaledUiAmountConfig,
+  PausableConfig,
+  ScaledUiAmountConfig,
+  getGroupPointerState,
+  getTokenGroupState,
+  getGroupMemberPointerState,
+  getTokenGroupMemberState,
+  getPausableAccount,
+  PausableAccount,
+} from "@solana/spl-token";
 import { TokenMetadata, unpack as unpackTokenMetadata } from '@solana/spl-token-metadata';
 import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
 import { getConnection } from "./client";
@@ -50,12 +60,13 @@ type TokenAccount2022DerivedInfo = {
 
 type TokenAccount2022Extensions = {
   transferFeeAmount: TransferFeeAmount | null,
-  // confidentialTransferAccount
   immutableOwner: ImmutableOwner | null,
   memoTransfer: MemoTransfer | null,
   cpiGuard: CpiGuard | null,
   nonTransferableAccount: NonTransferableAccount | null,
   transferHookAccount: TransferHookAccount | null,
+  pausableAccount: PausableAccount | null,
+  confidentialTransferExtensions: String[] | null,
 }
 
 export type TokenAccount2022Info = {
@@ -79,7 +90,6 @@ type Mint2022DerivedInfo = {
 type Mint2022Extensions = {
   transferFeeConfig: TransferFeeConfig | null,
   mintCloseAuthority: MintCloseAuthority | null,
-  // confidentialTransferMint
   defaultAccountState: DefaultAccountState | null,
   nonTransferable: NonTransferable | null,
   interestBearingConfig: InterestBearingMintConfigState | null,
@@ -87,6 +97,13 @@ type Mint2022Extensions = {
   transferHook: TransferHook | null,
   metadataPointer: Partial<MetadataPointer> | null,
   tokenMetadata: TokenMetadata | null, 
+  tokenGroupPointer: Partial<MetadataPointer> | null,
+  tokenGroup: Partial<TokenMetadata> | null,
+  tokenGroupMemberPointer: Partial<MetadataPointer> | null,
+  tokenGroupMember: Partial<TokenMetadata> | null,
+  pausableConfig: PausableConfig | null,
+  scaledUiAmountConfig: ScaledUiAmountConfig | null,
+  confidentialTransferExtensions: String[] | null,
 }
 
 export type Mint2022Info = {
@@ -111,12 +128,12 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
 
   // extention
   const transferFeeAmount = getTransferFeeAmount(account);
-  // const confidentialTransferAccount = not implemented yet
   const immutableOwner = getImmutableOwner(account);
   const memoTransfer = getMemoTransfer(account);
   const cpiGuard = getCpiGuard(account);
   const nonTransferableAccount = getNonTransferableAccount(account);
   const transferHookAccount = getTransferHookAccount(account);
+  const pausableAccount = getPausableAccount(account);
 
   // tlvData: Type(2bytes) + Length(2bytes) + Value(Length bytes)
   const extensions = getExtensionTypes(account.tlvData);
@@ -128,11 +145,36 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
       case ExtensionType.CpiGuard:
       case ExtensionType.NonTransferableAccount:
       case ExtensionType.TransferHookAccount:
+      case ExtensionType.PausableAccount:
+      // confidential
+      case ExtensionType.ConfidentialTransferAccount:
+      case 17 as ExtensionType: // ConfidentialTransferFeeAmount
         return false;
       default:
         return true;
     }
   });
+
+  const confidentialTransferExtensionTypes = extensions.sort().filter((e) => {
+    switch (e) {
+      case ExtensionType.ConfidentialTransferAccount:
+      case 17 as ExtensionType: // ConfidentialTransferFeeAmount
+        return true;
+      default:
+        return false;
+    }
+  }).map((e) => {{
+    switch (e) {
+      case ExtensionType.ConfidentialTransferAccount:
+        return "ConfidentialTransferAccount";
+      case 17 as ExtensionType:
+        return "ConfidentialTransferFeeAmount";
+    }
+  }});
+
+  const confidentialTransferExtensions = confidentialTransferExtensionTypes.length > 0
+    ? confidentialTransferExtensionTypes
+    : null;
 
   // isATA ?
   const ataAddress = await utils.token.associatedAddress({ mint: account.mint, owner: account.owner });
@@ -149,6 +191,8 @@ export async function getTokenAccount2022Info(addr: Address): Promise<TokenAccou
         cpiGuard,
         nonTransferableAccount,
         transferHookAccount,
+        pausableAccount,
+        confidentialTransferExtensions,
       },
       unknownExtensions,
     },
@@ -181,7 +225,6 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
 
   const transferFeeConfig = getTransferFeeConfig(mint);
   const mintCloseAuthority = getMintCloseAuthority(mint);
-  // const confidentialTransferMint = ?
   const defaultAccountState = getDefaultAccountState(mint);
   const nonTransferable = getNonTransferable(mint);
   const interestBearingConfig = getInterestBearingMintConfigState(mint);
@@ -193,6 +236,12 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
     if (data === null) return null;
     return unpackTokenMetadata(data);
   })();
+  const tokenGroupPointer = getGroupPointerState(mint);
+  const tokenGroup = getTokenGroupState(mint);
+  const tokenGroupMemberPointer = getGroupMemberPointerState(mint);
+  const tokenGroupMember = getTokenGroupMemberState(mint);
+  const pausableConfig = getPausableConfig(mint);
+  const scaledUiAmountConfig = getScaledUiAmountConfig(mint);
 
   // tlvData: Type(2bytes) + Length(2bytes) + Value(Length bytes)
   const extensions = getExtensionTypes(mint.tlvData);
@@ -207,11 +256,45 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
       case ExtensionType.TransferHook:
       case ExtensionType.MetadataPointer:
       case ExtensionType.TokenMetadata:
+      case ExtensionType.GroupPointer:
+      case ExtensionType.TokenGroup:
+      case ExtensionType.GroupMemberPointer:
+      case ExtensionType.TokenGroupMember:
+      case ExtensionType.ScaledUiAmountConfig:
+      case ExtensionType.PausableConfig:
+      // confidential
+      case ExtensionType.ConfidentialTransferMint:
+      case 16 as ExtensionType: // ConfidentialTransferFee
+      case 24 as ExtensionType: // ConfidentialMintBurn
         return false;
       default:
         return true;
     }
   });
+
+  const confidentialTransferExtensionTypes = extensions.sort().filter((e) => {
+    switch (e) {
+      case ExtensionType.ConfidentialTransferMint:
+      case 16 as ExtensionType: // ConfidentialTransferFee
+      case 24 as ExtensionType: // ConfidentialMintBurn
+        return true;
+      default:
+        return false;
+    }
+  }).map((e) => {{
+    switch (e) {
+      case ExtensionType.ConfidentialTransferMint:
+        return "ConfidentialTransferMint";
+      case 16 as ExtensionType:
+        return "ConfidentialTransferFee";
+      case 24 as ExtensionType:
+        return "ConfidentialMintBurn";
+    }
+  }});
+
+  const confidentialTransferExtensions = confidentialTransferExtensionTypes.length > 0
+    ? confidentialTransferExtensionTypes
+    : null;
 
   // TokenBadge
   const tokenBadge = PDAUtil.getTokenBadge(
@@ -237,6 +320,13 @@ export async function getMint2022Info(addr: Address): Promise<Mint2022Info> {
         transferHook,
         metadataPointer,
         tokenMetadata,
+        tokenGroupPointer,
+        tokenGroup,
+        tokenGroupMemberPointer,
+        tokenGroupMember,
+        pausableConfig,
+        scaledUiAmountConfig,
+        confidentialTransferExtensions,
       },
       unknownExtensions,
     },

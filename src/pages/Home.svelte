@@ -10,13 +10,11 @@
   <li>Whirlpool / TickArray</li>
   <li>Whirlpool / PositionBundle</li>
   <li>Whirlpool / LockConfig</li>
+  <li>Whirlpool / Oracle</li>
   <li>Token / Mint</li>
   <li>Token / Account</li>
   <li>Token2022 / Mint</li>
   <li>Token2022 / Account</li>
-  <li>TokenSwap / SwapState</li>
-  <li>Aquafarm / GlobalFarm</li>
-  <li>Aquafarm / UserFarm</li>
   <li>Generic</li>
 </ul>
 

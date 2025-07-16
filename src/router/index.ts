@@ -22,12 +22,6 @@ import AssociatedTokenAccount from "../pages/token/AssociatedTokenAccount.svelte
 import TokenAccount2022 from "../pages/token2022/Account.svelte";
 import TokenMint2022 from "../pages/token2022/Mint.svelte";
 
-import TokenSwap from "../pages/tokenswap/TokenSwap.svelte";
-import TokenSwapList from "../pages/tokenswap/List.svelte";
-
-import GlobalFarm from "../pages/aquafarm/GlobalFarm.svelte";
-import UserFarm from "../pages/aquafarm/UserFarm.svelte";
-
 import Generic from "../pages/Generic.svelte";
 
 export const routes = {
@@ -55,12 +49,6 @@ export const routes = {
 
   '/token2022/account/:pubkey': TokenAccount2022,
   '/token2022/mint/:pubkey': TokenMint2022,
-
-  '/tokenswap/list': TokenSwapList,
-  '/tokenswap/swapstate/:pubkey': TokenSwap,
-
-  '/aquafarm/globalfarm/:pubkey': GlobalFarm,
-  '/aquafarm/userfarm/:pubkey': UserFarm,
 
   '/generic/:pubkey': Generic,
 }

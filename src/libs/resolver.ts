@@ -4,13 +4,8 @@ import { Address } from "@coral-xyz/anchor";
 import { ORCA_WHIRLPOOL_PROGRAM_ID } from "@orca-so/whirlpools-sdk";
 import { AddressUtil } from "@orca-so/common-sdk";
 import { getConnection } from "./client";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { isDynamicTickArray } from "./whirlpool";
-
-const ORCA_TOKEN_SWAP_V1_ID = new PublicKey("DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1");
-const ORCA_TOKEN_SWAP_V2_ID = new PublicKey("9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP");
-const ORCA_TOKEN_SWAP_V2_DEVNET_ID = new PublicKey("3xQ8SWv2GaFXXpHZNqkXsdxq5DZciHBz6ZFoPPfbFd7U");
-const ORCA_AQUAFARM_ID = new PublicKey("82yxjeMsvaURa4MbZZ7WZZHfobirZYkH1zF8fmeGtyaQ");
 
 export type ResolvedAccount = {
   pubkey: PublicKey,
@@ -62,23 +57,6 @@ export async function resolveAccountType(addr: Address): Promise<ResolvedAccount
             return { pubkey, path: "/token2022/account" };
           }
         }
-    }
-  }
-
-  if (
-    accountInfo.owner.equals(ORCA_TOKEN_SWAP_V1_ID) ||
-    accountInfo.owner.equals(ORCA_TOKEN_SWAP_V2_ID) ||
-    accountInfo.owner.equals(ORCA_TOKEN_SWAP_V2_DEVNET_ID)
-  ) {
-    switch (accountInfo.data.length) {
-      case 324: return { pubkey, path: "/tokenswap/swapstate" };
-    }
-  }
-
-  if (accountInfo.owner.equals(ORCA_AQUAFARM_ID)) {
-    switch (accountInfo.data.length){
-      case 283: return { pubkey, path: "/aquafarm/globalfarm" };
-      case 106: return { pubkey, path: "/aquafarm/userfarm" };
     }
   }
 
