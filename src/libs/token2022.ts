@@ -38,7 +38,7 @@ import {
   getTokenGroupMemberState,
   getPausableAccount,
   PausableAccount,
-} from "@solana/spl-token-2022";
+} from "@solana/spl-token";
 import { TokenMetadata, unpack as unpackTokenMetadata } from '@solana/spl-token-metadata';
 import { AccountMetaInfo, getAccountInfo, toMeta } from "./account";
 import { getConnection } from "./client";

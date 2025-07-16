@@ -11,7 +11,7 @@ import Decimal from "decimal.js";
 import moment from "moment";
 import { TokenExtensionUtil } from "@orca-so/whirlpools-sdk/dist/utils/public/token-extension-util";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
 const STATIC_FEE_TIER_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
@@ -314,11 +314,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       tokenInfoR0,
       tokenInfoR1,
       tokenInfoR2,
-      tokenVaultAAmount: DecimalUtil.fromBN(vaults[0].amount, decimalsA),
-      tokenVaultBAmount: DecimalUtil.fromBN(vaults[1].amount, decimalsB),
-      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(vaults[2].amount, decimalsR0),
-      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(vaults[3].amount, decimalsR1),
-      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(vaults[4].amount, decimalsR2),
+      tokenVaultAAmount: DecimalUtil.fromBN(new BN(vaults[0].amount.toString()), decimalsA),
+      tokenVaultBAmount: DecimalUtil.fromBN(new BN(vaults[1].amount.toString()), decimalsB),
+      tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[2].amount.toString()), decimalsR0),
+      tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[3].amount.toString()), decimalsR1),
+      tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(new BN(vaults[4].amount.toString()), decimalsR2),
       reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR0),
       reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
       reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),

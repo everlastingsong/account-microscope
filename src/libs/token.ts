@@ -1,9 +1,8 @@
 import { buildDefaultAccountFetcher, IGNORE_CACHE, ORCA_WHIRLPOOL_PROGRAM_ID, PDAUtil } from "@orca-so/whirlpools-sdk";
 import { Address, utils } from "@coral-xyz/anchor";
-import { AddressUtil, DecimalUtil, ParsableMintInfo, ParsableTokenAccountInfo } from "@orca-so/common-sdk";
+import { AccountWithTokenProgram, AddressUtil, DecimalUtil, MintWithTokenProgram, ParsableMintInfo, ParsableTokenAccountInfo } from "@orca-so/common-sdk";
 import { PublicKey, ParsedAccountData } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { MintInfo as SplMintInfo, AccountInfo as SplAccountInfo } from "@solana/spl-token";
 import { AccountMetaInfo, getAccountInfo, toFixedDecimal, toMeta } from "./account";
 import { getConnection } from "./client";
 import { getTokenHolders, TokenHolderEntry } from "./solscanapi";
@@ -23,7 +22,7 @@ type TokenAccountDerivedInfo = {
 
 export type TokenAccountInfo = {
   meta: AccountMetaInfo,
-  parsed: SplAccountInfo,
+  parsed: AccountWithTokenProgram,
   derived: TokenAccountDerivedInfo,
 }
 
@@ -37,7 +36,7 @@ type MintDerivedInfo = {
 
 export type MintInfo = {
   meta: AccountMetaInfo,
-  parsed: SplMintInfo,
+  parsed: MintWithTokenProgram,
   derived: MintDerivedInfo,
 }
 
@@ -61,7 +60,7 @@ export async function getTokenAccountInfo(addr: Address): Promise<TokenAccountIn
     parsed: splTokenAccountInfo,
     derived: {
       decimals: mint.decimals,
-      amount: DecimalUtil.fromBN(splTokenAccountInfo.amount, mint.decimals),
+      amount: DecimalUtil.fromBN(new BN(splTokenAccountInfo.amount.toString()), mint.decimals),
       isATA,
     }
   };
@@ -93,7 +92,7 @@ export async function getMintInfo(addr: Address): Promise<MintInfo> {
     meta: toMeta(pubkey, accountInfo, slotContext),
     parsed: splMintInfo,
     derived: {
-      supply: DecimalUtil.fromBN(splMintInfo.supply, splMintInfo.decimals),
+      supply: DecimalUtil.fromBN(new BN(splMintInfo.supply.toString()), splMintInfo.decimals),
       metadata,
       largestHolders,
       whirlpoolPosition: position === null ? undefined : positionPubkey,
