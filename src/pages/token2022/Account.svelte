@@ -39,7 +39,15 @@
         <pre>{JSON.stringify(tokenAccountInfo.parsed.unknownExtensions)}</pre>
       </ExtensionData>
       {/if}
-  
+
+      <ExtensionData name="confidential transfer extensions" href="" desc="Includes several confidential transfer extensions">
+        {#if tokenAccountInfo.parsed.extensions.confidentialTransferExtensions}
+          <pre>{JSON.stringify(tokenAccountInfo.parsed.extensions.confidentialTransferExtensions)}</pre>
+        {:else}
+          <pre>No extensions</pre>
+        {/if}
+      </ExtensionData>
+
       <!-- desc is quoted from: https://github.com/solana-labs/solana-program-library/blob/master/token/program-2022/src/extension/mod.rs#L906 -->
       <ExtensionData name="TransferFeeAmount(2)" href="https://spl.solana.com/token-2022/extensions#transfer-fees" desc="Includes withheld transfer fees">
         <pre>{toJsonStringWithoutTopBracket(tokenAccountInfo.parsed.extensions.transferFeeAmount)}</pre>
@@ -58,6 +66,9 @@
       </ExtensionData>
       <ExtensionData name="TransferHookAccount(15)" href="https://spl.solana.com/token-2022/extensions#transfer-hook" desc="Indicates that the tokens in this account belong to a mint with a transfer hook">
         <pre>{toJsonStringWithoutTopBracket(tokenAccountInfo.parsed.extensions.transferHookAccount)}</pre>
+      </ExtensionData>
+      <ExtensionData name="PausableAccount(27)" href="https://www.solana-program.com/docs/token-2022/extensions#pausable" desc="Indicates that the tokens in this account belong to a mint with a pausable configuration">
+        <pre>{toJsonStringWithoutTopBracket(tokenAccountInfo.parsed.extensions.pausableAccount)}</pre>
       </ExtensionData>
     </Data>
   </ParsedData>

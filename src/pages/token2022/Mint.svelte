@@ -39,6 +39,14 @@
     </ExtensionData>
     {/if}
 
+    <ExtensionData name="confidential transfer extensions" href="" desc="Includes several confidential transfer extensions">
+      {#if mintInfo.parsed.extensions.confidentialTransferExtensions}
+        <pre>{JSON.stringify(mintInfo.parsed.extensions.confidentialTransferExtensions)}</pre>
+      {:else}
+        <pre>No extensions</pre>
+      {/if}
+    </ExtensionData>
+
     <!-- desc is quoted from: https://github.com/solana-labs/solana-program-library/blob/master/token/program-2022/src/extension/mod.rs#L906 -->
     <ExtensionData name="TransferFeeConfig(1)" href="https://spl.solana.com/token-2022/extensions#transfer-fees" desc="Includes transfer fee rate info and accompanying authorities to withdraw and set the fee">
       <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.transferFeeConfig)}</pre>
@@ -66,6 +74,26 @@
     </ExtensionData>
     <ExtensionData name="TokenMetadata(19)" href="https://spl.solana.com/token-2022/extensions#metadata" desc="Mint contains token-metadata">
       <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenMetadata)}</pre>
+    </ExtensionData>
+
+    <ExtensionData name="TokenGroupPointer(20)" href="https://www.solana-program.com/docs/token-2022/extensions#group-pointer" desc="Includes a pointer to a group of tokens">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenGroupPointer)}</pre>
+    </ExtensionData>
+    <ExtensionData name="TokenGroup(21)" href="https://www.solana-program.com/docs/token-2022/extensions#group" desc="Includes a group of tokens">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenGroup)}</pre>
+    </ExtensionData>
+    <ExtensionData name="TokenGroupMemberPointer(22)" href="https://www.solana-program.com/docs/token-2022/extensions#member-pointer" desc="Includes a pointer to a member of a token group">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenGroupMemberPointer)}</pre>
+    </ExtensionData>
+    <ExtensionData name="TokenGroupMember(23)" href="https://www.solana-program.com/docs/token-2022/extensions#member" desc="Includes a member of a token group">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.tokenGroupMember)}</pre>
+    </ExtensionData>
+
+    <ExtensionData name="ScaledUiAmountConfig(25)" href="https://www.solana-program.com/docs/token-2022/extensions#scaled-ui-amount" desc="Includes a configuration for scaling the UI amount">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.scaledUiAmountConfig)}</pre>
+    </ExtensionData>
+    <ExtensionData name="PausableConfig(26)" href="https://www.solana-program.com/docs/token-2022/extensions#pausable" desc="Includes a configuration for pausing mint operations">
+      <pre>{toJsonStringWithoutTopBracket(mintInfo.parsed.extensions.pausableConfig)}</pre>
     </ExtensionData>
   </Data>
 </ParsedData>
