@@ -12,12 +12,14 @@ export type ResolvedAccount = {
   path: string,
 }
 
+const ORCA_IMMUTABLE_WHIRLPOOL_PROGRAM_ID = new PublicKey("iwhrLHdsgrvmnwU8GF2FSmyabSMjfHwFGJAX2ufJ3ZN");
+
 export async function resolveAccountType(addr: Address): Promise<ResolvedAccount> {
   const pubkey = AddressUtil.toPubKey(addr);
   const connection = getConnection();
   const accountInfo = await connection.getAccountInfo(pubkey);
 
-  if (accountInfo.owner.equals(ORCA_WHIRLPOOL_PROGRAM_ID)) {
+  if (accountInfo.owner.equals(ORCA_WHIRLPOOL_PROGRAM_ID) || accountInfo.owner.equals(ORCA_IMMUTABLE_WHIRLPOOL_PROGRAM_ID)) {
     if (isDynamicTickArray(accountInfo)) {
       return { pubkey, path: "/whirlpool/tickarray" };
     }
